@@ -199,6 +199,8 @@ export const DocumentReferencePropertyView = memo(function DashboardColumnMin({
   mode: "selected" | "candidate" | "display";
 }) {
   const type = data.type;
+  const chipRef = React.useRef<HTMLDivElement>(null);
+
   const typeUIConfig = {
     ...getDocumentTypeLayer(type),
     color: getDocumentTypeColor(type),
@@ -217,17 +219,21 @@ export const DocumentReferencePropertyView = memo(function DashboardColumnMin({
   }
   return (
     <div
-      className="w-full group"
+      ref={chipRef}
+      className={cn(
+        "w-full group flex-1 flex flex-row justify-start items-center",
+        "hover:cursor-pointer"
+      )}
       onClick={mode === "display" ? onClick : undefined}
     >
       <DashboardCard
         className={cn(
-          "flex flex-row items-center justify-start space-x-6",
           "w-full rounded-md px-1 py-0.5",
+          "flex flex-row items-center justify-start space-x-6",
           "group-hover:cursor-pointer group-hover:bg-secondary"
         )}
       >
-        <div className="flex flex-1 flex-row justify-start items-center space-x-4">
+        <div className="w-full flex flex-1 flex-row justify-start items-center space-x-2 h-9 relative">
           <DashboardLabelChip type={data.type} />
           <h1
             className={cn(
@@ -237,16 +243,21 @@ export const DocumentReferencePropertyView = memo(function DashboardColumnMin({
           >
             {data.title}
           </h1>
+          <Button
+            type="button"
+            className={cn(
+              "absolute",
+              "right-1 rounded-md p-1 h-9 w-9",
+              "invisible group-hover:visible",
+              "hover:bg-background hover:cursor-pointer"
+            )}
+            onClick={onClick}
+            size={"icon"}
+            variant={"outline"}
+          >
+            {getModeIcon()}
+          </Button>
         </div>
-        <Button
-          type="button"
-          className={cn("invisible group-hover:visible", "hover:bg-background")}
-          onClick={onClick}
-          size={"icon"}
-          variant={"outline"}
-        >
-          {getModeIcon()}
-        </Button>
       </DashboardCard>
     </div>
   );
@@ -280,7 +291,6 @@ export const DocumentTreeNode = memo(function DocumentTreeNode({
       )}
       style={style}
     >
-      {/* <div className={cn("w-[6px] h-[6px] rounded-full", color.leadingColor)} /> */}
       <div className="w-full flex flex-row justify-start items-center relative">
         <DashboardLabelChip type={data.type} />
         <h1
@@ -306,9 +316,6 @@ export const DocumentTreeNode = memo(function DocumentTreeNode({
           <LuArrowRight className={color.textColor} />
         </Button>
       </div>
-      {/* {data.properties?.map((property, index) => (
-        <PropertyValueField property={property} index={index} />
-      ))} */}
     </div>
   );
 });

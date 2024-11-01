@@ -1,3 +1,5 @@
+import React from "react";
+
 export function LoadingWidget() {
   return (
     <div className="flex w-fit p-4 flex-row justify-center items-center space-x-2">
@@ -8,4 +10,16 @@ export function LoadingWidget() {
       <div className="w-3 h-3 rounded-full bg-yellow-500 delay-300 animate-bounce"></div>
     </div>
   );
+}
+
+export function SuspenseWidget({
+  isSuspense = false,
+  fallback = <LoadingWidget />,
+  children,
+}: {
+  isSuspense?: boolean;
+  fallback?: React.ReactNode;
+  children?: React.ReactNode;
+}) {
+  return <>{isSuspense ? fallback : children}</>;
 }

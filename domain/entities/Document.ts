@@ -2,6 +2,7 @@ import { Property } from "./DocumentProperty";
 
 enum DocumentObjectType {
   organization = "organization",
+  phase = "phase",
   site = "site",
   department = "department",
   system = "system",

@@ -243,12 +243,12 @@ export function DocumentDataPageForm({
                     className={cn(colorTheme.textColor)}
                     size="lg"
                   >
-                    <>
+                    <div>
                       {!isCreatingNewData ? "更新" : "新增"}
                       {form.formState.isSubmitting ? (
                         <LuLoader2 className="animate-spin" />
                       ) : null}
-                    </>
+                    </div>
                   </Button>
                 </div>
               </DashboardCardContent>
@@ -275,11 +275,10 @@ export function InfoBlock({
   return orientation === "horizontal" ? (
     <div
       className={cn(
-        "w-48 h-fit flex flex-col justify-start items-center",
+        "w-48 h-fit flex flex-col justify-start items-center p-1",
         className
       )}
     >
-      {/* <p className={cn(colorTheme.textColor, "text-sm font-normal")}>{label}</p> */}
       {children}
     </div>
   ) : (
@@ -298,7 +297,6 @@ export function InfoBlock({
         {label}
         <Separator orientation="vertical" className="min-h-1 hidden md:block" />
       </div>
-
       <div className="col-span-6 flex flex-col justify-start items-start">
         {children}
       </div>

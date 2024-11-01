@@ -13,6 +13,7 @@ import { InputPropField } from "./property_field/InputPropField";
 import { CheckBoxPropField } from "./property_field/CheckBoxPropField";
 import { DashboardSelectionField } from "./property_field/SelectionPropField";
 import { DateTimePickerField } from "./property_field/DateTimePropField";
+import { DocumentTreeProvider } from "../_hooks/useDocumentContext";
 
 export function PropertyValueField({
   property,
@@ -62,15 +63,21 @@ export function PropertyValueField({
     case PropertyType.reference:
       return (
         // <InfoBlock label={property.name} orientation={orientation}>
-        <DocumentReferenceField
-          // isRequired={property.required}
-          name={`properties.${index}.value`}
-          isDisabled={property.readonly}
-          limit={(property as DocumentReferenceProperty).limit}
-          referenceGroup={
-            (property as DocumentReferenceProperty).referenceGroup
-          }
-        />
+        <DocumentTreeProvider
+          type={(property as DocumentReferenceProperty).referenceGroup}
+        >
+          <DocumentReferenceField
+            // isRequired={property.required}
+            name={`properties.${index}.value`}
+            isDisabled={property.readonly}
+            limit={(property as DocumentReferenceProperty).limit}
+            referenceGroup={
+              (property as DocumentReferenceProperty).referenceGroup
+            }
+            view={view}
+          />
+        </DocumentTreeProvider>
+
         // </InfoBlock>
       );
     case PropertyType.options:

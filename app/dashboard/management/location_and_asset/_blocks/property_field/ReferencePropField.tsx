@@ -21,31 +21,32 @@ import {
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { LuLock, LuPlus, LuSearch } from "react-icons/lu";
+import { LuLock, LuSearch } from "react-icons/lu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingWidget } from "@/components/blocks/LoadingWidget";
+import {
+  LoadingWidget,
+  SuspenseWidget,
+} from "@/components/blocks/LoadingWidget";
 import { DocumentReferencePropertyView } from "../DocumentDataDisplayUI";
 import { ButtonHTMLAttributes } from "react";
-import { motion } from "framer-motion";
+import { AnimationListContent } from "@/components/motion/AnimationListContent";
+import {
+  DocumentTreeProvider,
+  useDocumentTree,
+} from "../../_hooks/useDocumentContext";
 
 function SearchButton({ isEmpty = false }: { isEmpty?: boolean }) {
   const buttonProps = {
     type: "button",
     variant: "ghost",
-    className: "text-gray-600 gap-2",
+    className: "text-gray-600 gap-2 w-full",
   } as {
     type: ButtonHTMLAttributes<HTMLButtonElement>["type"];
   };
-  return !isEmpty ? (
+  return (
     <Button {...buttonProps} asChild>
       <div className="flex flex-row justify-center items-center">
         <LuSearch /> 修改關聯
-      </div>
-    </Button>
-  ) : (
-    <Button {...buttonProps} asChild>
-      <div className="flex flex-row justify-center items-center">
-        <LuPlus /> 添加關聯
       </div>
     </Button>
   );
@@ -69,7 +70,8 @@ export function DocumentReferenceField({
   const { control, ...form } = useFormContext();
   const useQueryRoute = useDataQueryRoute();
   const documentOptions = useDocumentReference(referenceGroup);
-
+  const documentTree = useDocumentTree();
+  console.log(documentTree);
   return (
     <FormField
       control={control}
@@ -91,13 +93,16 @@ export function DocumentReferenceField({
 
         const onReferenceRemove = (documentId: string) => {
           field.onChange(
-            limit
-              ? []
-              : selected
-                  .filter((selectedDoc) => selectedDoc.id !== documentId)
-                  .map((data) => data.id)
+            selected
+              .filter((selectedDoc) => selectedDoc.id !== documentId)
+              .map((data) => data.id)
           );
         };
+
+        const onReferencesClick = (doc: DocumentObject) => {
+          useQueryRoute.setAssetId(doc.id ?? "", referenceGroup);
+        };
+
         const isReferenceEmpty = !field.value || field.value.length === 0;
         const isBlocking = documentOptions.isFetchingData;
 
@@ -110,7 +115,7 @@ export function DocumentReferenceField({
                 )}
               >
                 <Dialog>
-                  <DialogTrigger className="w-full flex flex-row justify-start items-start rounded-md">
+                  <DialogTrigger>
                     <SearchButton isEmpty={isReferenceEmpty} />
                   </DialogTrigger>
                   <DialogContent className="">
@@ -118,91 +123,45 @@ export function DocumentReferenceField({
                       <DialogTitle>新增關聯</DialogTitle>
                       <DialogDescription>選擇你要關聯的文檔</DialogDescription>
                     </DialogHeader>
-                    {isBlocking ? (
-                      <PropsLoadingWidget />
-                    ) : (
-                      <div className="w-full flex flex-col justify-start items-start space-y-2 max-h-[500px]">
-                        <div className={cn("w-full grid gap-1 overflow-auto")}>
-                          <Label>已選擇的文檔</Label>
-                          {selected.map((document) => {
-                            return (
-                              <motion.div
-                                key={document.id}
-                                initial="initial"
-                                animate="animate"
-                                exit="exit"
-                                variants={{
-                                  initial: { opacity: 0, y: -20, x: -20 },
-                                  animate: { opacity: 1, y: 0, x: 0 },
-                                  exit: { opacity: 0, y: 20, x: 20 },
-                                }}
-                              >
-                                <DialogCloseWrapper wrapped={limit}>
-                                  <DocumentReferencePropertyView
-                                    data={document}
-                                    onClick={() => {
-                                      onReferenceRemove(document.id ?? "");
-                                    }}
-                                    mode="selected"
-                                  />
-                                </DialogCloseWrapper>
-                              </motion.div>
-                            );
-                          })}
-                        </div>
-                        <div className={cn("w-full grid gap-1 overflow-auto")}>
-                          <Label>選擇其他文檔</Label>
-                          {options.map((document) => {
-                            return (
-                              <motion.div
-                                key={document.id}
-                                initial="initial"
-                                animate="animate"
-                                exit="exit"
-                                variants={{
-                                  initial: { opacity: 0, y: 20, x: 20 },
-                                  animate: { opacity: 1, y: 0, x: 0 },
-                                  exit: { opacity: 0, y: -20, x: -20 },
-                                }}
-                              >
-                                <DialogCloseWrapper wrapped={limit}>
-                                  <DocumentReferencePropertyView
-                                    data={document}
-                                    onClick={() => {
-                                      onReferenceAdd(document.id ?? "");
-                                    }}
-                                    mode="candidate"
-                                  />
-                                </DialogCloseWrapper>
-                              </motion.div>
-                            );
-                          })}
-                        </div>
+                    <SuspenseWidget
+                      isSuspense={isBlocking}
+                      fallback={<PropsLoadingWidget />}
+                    >
+                      <div className="w-full flex flex-col justify-start items-start space-y-2 max-h-[500px] overflow-y-scroll">
+                        <ReferencesList
+                          references={selected}
+                          label="已選擇的文檔"
+                          isInDialog={limit}
+                          referencesMode="selected"
+                          onClick={(doc) => {
+                            onReferenceRemove(doc.id ?? "");
+                          }}
+                        />
+                        <ReferencesList
+                          references={options}
+                          label="選擇其他文檔"
+                          isInDialog={limit}
+                          referencesMode="candidate"
+                          onClick={(doc) => {
+                            onReferenceAdd(doc.id ?? "");
+                          }}
+                        />
                       </div>
-                    )}
+                    </SuspenseWidget>
                   </DialogContent>
                 </Dialog>
-                {!isReferenceEmpty && isBlocking ? (
-                  <PropsLoadingWidget />
-                ) : (
-                  <div className="w-full h-fit grid grid-cols-1">
-                    {selected.map((data) => {
-                      return (
-                        <DocumentReferencePropertyView
-                          key={data.id}
-                          data={data}
-                          onClick={() => {
-                            useQueryRoute.setAssetId(
-                              data.id ?? "",
-                              referenceGroup
-                            );
-                          }}
-                          mode="display"
-                        />
-                      );
-                    })}
-                  </div>
-                )}
+                <SuspenseWidget
+                  isSuspense={isBlocking}
+                  fallback={<PropsLoadingWidget />}
+                >
+                  <ReferencesList
+                    references={selected}
+                    isInDialog={false}
+                    onClick={(doc) => {
+                      onReferencesClick(doc);
+                    }}
+                  />
+                </SuspenseWidget>
               </div>
             </FormControl>
             {isDisabled ? <LuLock /> : null}
@@ -211,6 +170,75 @@ export function DocumentReferenceField({
         );
       }}
     />
+  );
+}
+
+function ReferencesList({
+  references,
+  label,
+  isInDialog = false,
+  referencesMode = "display",
+  onClick,
+}: {
+  references: DocumentObject[];
+  label?: string;
+  isInDialog: boolean;
+  referencesMode?: "selected" | "candidate" | "display";
+  onClick: (doc: DocumentObject) => void;
+}) {
+  return (
+    <div className="w-full h-fit grid grid-cols-1">
+      {label && <Label>{label}</Label>}
+      {references.map((doc, index: number) => {
+        return (
+          <AnimationListContent key={doc.id} index={index}>
+            <DialogCloseWrapper key={doc.id} wrapped={isInDialog}>
+              <DocumentReferencePropertyView
+                data={doc}
+                onClick={() => {
+                  onClick(doc);
+                }}
+                mode={referencesMode}
+              />
+            </DialogCloseWrapper>
+          </AnimationListContent>
+        );
+      })}
+    </div>
+  );
+}
+function ReferencesTreeViewList({
+  references,
+  label,
+  isInDialog = false,
+  referencesMode = "display",
+  onClick,
+}: {
+  references: DocumentObject[];
+  label?: string;
+  isInDialog: boolean;
+  referencesMode?: "selected" | "candidate" | "display";
+  onClick: (doc: DocumentObject) => void;
+}) {
+  return (
+    <div className="w-full h-fit grid grid-cols-1">
+      {label && <Label>{label}</Label>}
+      {references.map((doc, index: number) => {
+        return (
+          <AnimationListContent key={doc.id} index={index}>
+            <DialogCloseWrapper key={doc.id} wrapped={isInDialog}>
+              <DocumentReferencePropertyView
+                data={doc}
+                onClick={() => {
+                  onClick(doc);
+                }}
+                mode={referencesMode}
+              />
+            </DialogCloseWrapper>
+          </AnimationListContent>
+        );
+      })}
+    </div>
   );
 }
 
@@ -224,6 +252,6 @@ function DialogCloseWrapper({
   return wrapped ? (
     <DialogClose className="w-full">{children}</DialogClose>
   ) : (
-    <>{children}</>
+    <div>{children}</div>
   );
 }

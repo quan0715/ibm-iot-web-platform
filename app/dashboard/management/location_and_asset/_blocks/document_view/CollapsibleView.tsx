@@ -26,18 +26,26 @@ import {
   getGroupDefaultType,
 } from "@/domain/entities/DocumentConfig";
 import { getDocumentTypeColor } from "../../_utils/documentTypeUIConfig";
-import { DocumentTreeNode } from "../DocumentDataDisplayUI";
+import {
+  DocumentReferencePropertyView,
+  DocumentTreeNode,
+} from "../DocumentDataDisplayUI";
 import { DocumentFormTableColumn } from "./TableView";
 import { useDocumentTemplate } from "../../_hooks/useDocumentTemplate";
-import { LoadingWidget } from "@/components/blocks/LoadingWidget";
+import {
+  LoadingWidget,
+  SuspenseWidget,
+} from "@/components/blocks/LoadingWidget";
 import { PropertyType } from "@/domain/entities/DocumentProperty";
 import { CreateNewDataButton } from "../DataCRUDTrigger";
 import { AnimationListContent } from "@/components/motion/AnimationListContent";
 import { AnimationChevron } from "@/components/motion/AnimationChevron";
 import { CollapsibleProps } from "@radix-ui/react-collapsible";
 import { Skeleton } from "@nextui-org/react";
-
-const LayerContext = createContext<number>(0);
+import {
+  LayerContext,
+  LevelCollapsibleWidget,
+} from "@/components/blocks/CollapsibleWidget";
 
 type CollapsibleDataTableTreeViewProps = {
   document: DocumentObject;
@@ -55,10 +63,6 @@ export function CollapsibleDataTableTreeEntryView({
   const documentTree = useDocumentTree();
   const documentGroupType = documentTree.type;
   const queryPathService = useDataQueryRoute();
-  const uiConfig = {
-    ...getDocumentTypeLayer(document.type),
-    color: getDocumentTypeColor(document.type),
-  };
   const children = documentTree.getChildrenData(
     document.ancestors ?? "",
     document.id ?? ""
@@ -69,11 +73,6 @@ export function CollapsibleDataTableTreeEntryView({
   };
 
   const depth = useContext(LayerContext) ?? 0;
-  const tableColConfig = useContext(TableContext);
-  const paddingStyle = {
-    paddingLeft: `${depth * 1}rem`,
-    width: tableColConfig[0].width,
-  };
   const childrenTypeOptions = getDocumentChildrenTypeOptions(
     document.type,
     documentGroupType
@@ -86,13 +85,11 @@ export function CollapsibleDataTableTreeEntryView({
           .filter((document) => document.type == type)
           .map((doc) => {
             return (
-              <LayerContext.Provider value={depth + 1} key={doc.id}>
-                <CollapsibleDataTableTreeEntryView
-                  document={doc}
-                  // expanded={false}
-                  key={doc.id}
-                />
-              </LayerContext.Provider>
+              <CollapsibleDataTableTreeEntryView
+                document={doc}
+                expanded={isOpen}
+                key={doc.id}
+              />
             );
           }),
         <div
@@ -135,62 +132,26 @@ export function CollapsibleDataTableTreeEntryView({
     queryPathService.setAssetId(docId);
     // setIsOpen(true);
   }
-
-  const ref = React.createRef<HTMLObjectElement>();
-  console.log(ref.current);
   return (
-    <Collapsible
-      // open={isOpen}
-      onOpenChange={handleToggle}
+    <LevelCollapsibleWidget
+      expanded={expanded}
+      content={getCollapseChildren()}
+      trigger={
+        <DocumentReferencePropertyView
+          data={document}
+          onClick={() => {
+            onDocumentSelect(document.id!);
+          }}
+          mode={"display"}
+        />
+      }
       className={cn(
         "rounded-md bg-background max-h-[500px] md:max-h-max",
         className
       )}
-      ref={ref}
     >
-      <div className="w-full flex flex-row">
-        <DashboardCard
-          style={{ width: tableColConfig[0].width }}
-          className="h-fit bg-transparent flex flex-row items-center group"
-        >
-          <div
-            style={paddingStyle}
-            className={cn(
-              uiConfig.color.hoveringColor,
-              "h-fit flex flex-row items-center py-1 group"
-            )}
-          >
-            <CollapsibleTrigger className="bg-transparent">
-              <AnimationChevron
-                className={cn(
-                  // haveChildren ? "visible" : "invisible",
-                  "p-2 rounded-md opacity-0 bg-transparent",
-                  isOpen ? "opacity-100" : "opacity-100 md:opacity-0",
-                  "group-hover:cursor-pointer group-hover:opacity-100"
-                )}
-                isExpanded={isOpen ? true : false}
-              />
-            </CollapsibleTrigger>
-            <CollapsibleTrigger className="bg-transparent" asChild>
-              <DocumentTreeNode
-                data={document}
-                isSelected={true}
-                onClick={() => onDocumentSelect(document.id!)}
-              />
-            </CollapsibleTrigger>
-          </div>
-        </DashboardCard>
-        <DocumentFormTableColumn data={document} />
-      </div>
-      <Separator className="w-full" />
-      <CollapsibleContent className="w-full">
-        {getCollapseChildren().map((child, index) => (
-          <AnimationListContent key={child.key} index={index}>
-            {child}
-          </AnimationListContent>
-        ))}
-      </CollapsibleContent>
-    </Collapsible>
+      <DocumentFormTableColumn data={document} />
+    </LevelCollapsibleWidget>
   );
 }
 type TableConfig = {
@@ -221,7 +182,7 @@ export function CollapsibleDataTableTreeView() {
   const tableColConfig = [
     {
       name: "主檔名稱",
-      width: "250px",
+      width: "300px",
     },
     ...properties.map((prop) => {
       if ((prop.type as PropertyType) === PropertyType.reference) {
@@ -237,58 +198,59 @@ export function CollapsibleDataTableTreeView() {
     }),
   ];
 
-  return isLoadingTemplate || !template ? (
-    <div className="w-[100px] max-w-max flex flex-col justify-start items-center space-y-">
-      {Array.from({ length: 5 }).map((_, index) => {
-        return (
-          <Skeleton
-            key={index}
-            className="w-full h-16 rounded-md bg-background"
-          />
-        );
-      })}
-    </div>
-  ) : (
-    <TableContext.Provider value={tableColConfig}>
-      <div className="max-w-max p-2 bg-background">
-        <div className="w-full bg-gray-50">
-          <div className="w-full flex flex-row justify-start items-center p-2">
-            <div
-              style={{ width: tableColConfig[0].width }}
-              className="text-sm font-semibold text-gray-500"
-            >
-              <p>主檔名稱</p>
-            </div>
-            {properties.map((prop) => {
-              return (
-                <div
-                  key={prop.name}
-                  className={cn(
-                    tableColConfig.find((config) => config.name === prop.name)
-                      ?.width ?? "w-48",
-                    "text-sm font-semibold text-gray-500"
-                  )}
-                >
-                  <div className="w-full flex flex-row">{prop.name}</div>
-                  {/* <p className="w-full">{prop.name}</p> */}
-                </div>
-              );
-            })}
-          </div>
+  return (
+    <SuspenseWidget
+      isSuspense={isLoadingTemplate || !template}
+      fallback={
+        <div className="w-[100px] max-w-max flex flex-col justify-start items-center space-y-">
+          {Array.from({ length: 5 }).map((_, index) => {
+            return (
+              <Skeleton
+                key={index}
+                className="w-full h-16 rounded-md bg-background"
+              />
+            );
+          })}
         </div>
-        <Separator />
-        {root.map((doc) => {
-          return (
-            <LayerContext.Provider value={0} key={doc.id}>
+      }
+    >
+      <TableContext.Provider value={tableColConfig}>
+        <div className="max-w-max p-2 bg-background">
+          <div className="w-full bg-gray-50 ">
+            <div className="w-full flex flex-row justify-start items-center p-2">
+              <div
+                style={{ width: tableColConfig[0].width }}
+                className="text-sm font-semibold text-gray-500"
+              >
+                <p>主檔名稱</p>
+              </div>
+              {properties.map((prop) => {
+                return (
+                  <div
+                    key={prop.name}
+                    className={cn(
+                      tableColConfig.find((config) => config.name === prop.name)
+                        ?.width ?? "w-48",
+                      "text-sm font-semibold text-gray-500"
+                    )}
+                  >
+                    <div className="w-full flex flex-row">{prop.name}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {root.map((doc) => {
+            return (
               <CollapsibleDataTableTreeEntryView
                 document={doc}
-                // expanded={true}
+                expanded={true}
                 key={doc.id}
               />
-            </LayerContext.Provider>
-          );
-        })}
-      </div>
-    </TableContext.Provider>
+            );
+          })}
+        </div>
+      </TableContext.Provider>
+    </SuspenseWidget>
   );
 }

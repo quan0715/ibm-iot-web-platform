@@ -131,9 +131,14 @@ export const documentConfig = [
             parent: DocumentObjectType.unknown,
           },
           {
+            name: "Phase",
+            type: DocumentObjectType.phase,
+            parent: DocumentObjectType.organization,
+          },
+          {
             name: "廠區",
             type: DocumentObjectType.site,
-            parent: DocumentObjectType.organization,
+            parent: DocumentObjectType.phase,
           },
           {
             name: "部門",

@@ -50,6 +50,10 @@ import {
 } from "@/domain/entities/DocumentProperty";
 import { config } from "process";
 import { TableContext } from "./CollapsibleView";
+import {
+  DocumentReferencePropertyView,
+  DocumentTreeNode,
+} from "../DocumentDataDisplayUI";
 
 export function DocumentFormTableView() {
   const rootPath = "";
@@ -207,14 +211,13 @@ export function DocumentFormTableColumn({
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <ThemeContext.Provider value={colorTheme}>
           <div className="flex flex-col">
-            <DashboardCard className="shadow-sm flex flex-row justify-start items-center ">
+            <DashboardCard className="shadow-sm flex flex-row justify-start items-start ">
               {/* <InfoBlock label={""} orientation={"horizontal"}>
-                <InputPropField
-                  name="title"
-                  placeholder={`${getDocumentTypeLayer(data.type).name} 名稱`}
-                  isRequired={true}
-                  textCss={cn("font-semibold", colorTheme.textColor)}
-                ></InputPropField>
+                <DocumentReferencePropertyView
+                  data={data}
+                  mode="display"
+                  onClick={() => queryPathService.setAssetId(data.id!)}
+                />
               </InfoBlock> */}
               <InfoBlock label={""} orientation={"horizontal"}>
                 <InputPropField
@@ -271,12 +274,12 @@ export function DocumentFormTableColumn({
                   className={cn(colorTheme.textColor)}
                   size="sm"
                 >
-                  <>
+                  <div>
                     {!isCreatingNewData ? "更新" : "新增"}
                     {form.formState.isSubmitting ? (
                       <LuLoader2 className="animate-spin" />
                     ) : null}
-                  </>
+                  </div>
                 </Button>
               </div>
             )}
