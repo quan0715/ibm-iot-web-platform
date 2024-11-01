@@ -57,7 +57,9 @@ function getDocumentGroupTypeFromString(type: string): DocumentGroupType {
   return DocumentGroupType[type as keyof typeof DocumentGroupType];
 }
 
-function getDocumentObjectType(typeString: string): DocumentObjectType {
+function getDocumentObjectTypeFromString(
+  typeString: string
+): DocumentObjectType {
   if (!Object.keys(DocumentObjectType).includes(typeString)) {
     return DocumentObjectType.unknown;
   }
@@ -76,5 +78,5 @@ export {
   DocumentGroupType,
   DocumentObjectType,
   getDocumentGroupTypeFromString,
-  getDocumentObjectType,
+  getDocumentObjectTypeFromString,
 };

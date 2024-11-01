@@ -13,7 +13,11 @@ import Link from "next/link";
 import { useDataQueryRoute } from "../_hooks/useQueryRoute";
 import { CreateNewDataButton } from "./DataCRUDTrigger";
 import { DashboardLabelChip } from "./DocumentLabelChip";
-import { DocumentObject, DocumentObjectType } from "@/domain/entities/Document";
+import {
+  DocumentObject,
+  DocumentObjectType,
+  Property,
+} from "@/domain/entities/Document";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -31,6 +35,11 @@ import { motion } from "framer-motion";
 import { date } from "zod";
 import { PropertyValueField } from "./DocuemntFormPropertyField";
 import { DocumentFormTableColumn } from "./document_view/TableView";
+import { InfoBlock } from "./DocumentDataCard";
+import { PropertyType } from "@/domain/entities/DocumentProperty";
+import { Checkbox } from "@/components/ui/checkbox";
+import { StatusChip } from "@/components/blocks/chips";
+import { Status } from "@/domain/entities/Status";
 
 export const DocumentDataTreeEntryView = memo(function DashboardColumnMin({
   data,
@@ -192,15 +201,20 @@ export const DocumentDataTreeEntryView = memo(function DashboardColumnMin({
 export const DocumentReferencePropertyView = memo(function DashboardColumnMin({
   data,
   onClick,
+  isCollapsible = false,
   mode = "display",
 }: {
   onClick?: () => void;
   data: DocumentObject;
+  isCollapsible?: boolean;
   mode: "selected" | "candidate" | "display";
 }) {
   const type = data.type;
   const chipRef = React.useRef<HTMLDivElement>(null);
-
+  const [isOpen, setIsOpen] = useState(false);
+  const onOpenChange = () => {
+    setIsOpen(!isOpen);
+  };
   const typeUIConfig = {
     ...getDocumentTypeLayer(type),
     color: getDocumentTypeColor(type),
@@ -218,48 +232,72 @@ export const DocumentReferencePropertyView = memo(function DashboardColumnMin({
     }
   }
   return (
-    <div
+    <Collapsible
+      open={isOpen}
       ref={chipRef}
       className={cn(
-        "w-full group flex-1 flex flex-row justify-start items-center",
-        "hover:cursor-pointer"
+        "w-full group flex-1 flex flex-col justify-start items-center py-2 px-1 rounded-md",
+        "hover:cursor-pointer",
+        tailwindColorClass.hoveringColor
       )}
       onClick={mode === "display" ? onClick : undefined}
+      onOpenChange={setIsOpen}
     >
-      <DashboardCard
-        className={cn(
-          "w-full rounded-md px-1 py-0.5",
-          "flex flex-row items-center justify-start space-x-6",
-          "group-hover:cursor-pointer group-hover:bg-secondary"
+      <div className="w-full flex flex-1 flex-row justify-start items-start space-x-2 h-9 relative">
+        {isCollapsible && (
+          <CollapsibleTrigger className="bg-transparent" asChild>
+            <div
+              className={cn(
+                "p-1 rounded-md opacity-0 bg-transparent",
+                isOpen ? "opacity-100" : "opacity-100 md:opacity-0",
+                "group-hover:cursor-pointer group-hover:opacity-100"
+              )}
+            >
+              <motion.div
+                initial={false}
+                animate={{ rotate: isOpen ? 90 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <LuChevronRight size={20} />
+              </motion.div>
+            </div>
+          </CollapsibleTrigger>
         )}
-      >
-        <div className="w-full flex flex-1 flex-row justify-start items-center space-x-2 h-9 relative">
-          <DashboardLabelChip type={data.type} />
-          <h1
-            className={cn(
-              "font-semibold text-sm",
-              tailwindColorClass.textColor
-            )}
-          >
-            {data.title}
-          </h1>
-          <Button
-            type="button"
-            className={cn(
-              "absolute",
-              "right-1 rounded-md p-1 h-9 w-9",
-              "invisible group-hover:visible",
-              "hover:bg-background hover:cursor-pointer"
-            )}
-            onClick={onClick}
-            size={"icon"}
-            variant={"outline"}
-          >
-            {getModeIcon()}
-          </Button>
+
+        <div className="w-full flex flex-col space-y-2">
+          <div className="flex-1 flex flex-row justify-start items-center space-x-2">
+            <DashboardLabelChip type={data.type} />
+            <h1
+              className={cn(
+                "font-semibold text-sm",
+                tailwindColorClass.textColor
+              )}
+            >
+              {data.title}
+            </h1>
+            <Button
+              type="button"
+              className={cn(
+                "absolute",
+                "right-1 rounded-md p-1 h-9 w-9",
+                "invisible group-hover:visible",
+                "hover:bg-background hover:cursor-pointer"
+              )}
+              onClick={onClick}
+              size={"icon"}
+              variant={"outline"}
+            >
+              {getModeIcon()}
+            </Button>
+          </div>
+          <CollapsibleContent className="w-full grid grid-cols-1 justify-between h-fit gap-2">
+            {data.properties.map((prop, index) => {
+              return <DataPropertyColumn key={index} property={prop} />;
+            })}
+          </CollapsibleContent>
         </div>
-      </DashboardCard>
-    </div>
+      </div>
+    </Collapsible>
   );
 });
 
@@ -316,6 +354,32 @@ export const DocumentTreeNode = memo(function DocumentTreeNode({
           <LuArrowRight className={color.textColor} />
         </Button>
       </div>
+    </div>
+  );
+});
+
+export const DataPropertyColumn = memo(function DataPropertyColumn({
+  property,
+}: {
+  property: Property;
+}) {
+  const getPropertyValue = (property: Property) => {
+    switch (property.type as PropertyType) {
+      case PropertyType.dateTime:
+        return <>{new Date(property.value as number).toLocaleString()}</>;
+      case PropertyType.status:
+        return <StatusChip status={Status[status as keyof typeof Status]} />;
+      default:
+        return <>{property.value as string}</>;
+    }
+  };
+  return (
+    <div className="w-full h-fit flex flex-col justify-start items-start space-y-0.5">
+      <div className="w-full flex-1 flex flex-row justify-between items-end">
+        <h1 className="text-sm font-semibold">{property.name}</h1>
+        <span className="text-sm font-normal">{property.value as string}</span>
+      </div>
+      <Separator />
     </div>
   );
 });

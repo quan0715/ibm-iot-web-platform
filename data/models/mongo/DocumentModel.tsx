@@ -1,7 +1,7 @@
 import {
   DocumentObject,
   DocumentTypeString,
-  getDocumentObjectType,
+  getDocumentObjectTypeFromString,
   Property,
 } from "@/domain/entities/Document";
 
@@ -49,7 +49,7 @@ export class MongoDocumentObjectModel {
       id: this._id?.toHexString() ?? "",
       title: this.title,
       description: this.description ?? "",
-      type: getDocumentObjectType(this.type),
+      type: getDocumentObjectTypeFromString(this.type),
       ancestors: this.ancestors,
       createAt: this.createAt,
       updateAt: this.updateAt,

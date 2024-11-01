@@ -1,5 +1,5 @@
 "use client";
-import { getDocumentObjectType } from "@/domain/entities/Document";
+import { getDocumentObjectTypeFromString } from "@/domain/entities/Document";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 interface QueryParams {
   selected?: string;
@@ -14,7 +14,9 @@ export function useDataQueryRoute() {
   const dataId = searchParams.get("data") || "";
   const page = searchParams.get("page") || "";
   const ancestors = searchParams.get("ancestors") ?? "";
-  const dataType = getDocumentObjectType(searchParams.get("type") ?? "");
+  const dataType = getDocumentObjectTypeFromString(
+    searchParams.get("type") ?? ""
+  );
 
   function createQueryString({ selected, mode, page }: QueryParams): string {
     const params = new URLSearchParams();

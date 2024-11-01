@@ -44,6 +44,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+import { TableToolBar } from "./_blocks/TableToolBar";
+
 function TabListWidget() {
   const defaultViews = documentConfig[0].views[0].group;
   const queryPath = useDataQueryRoute();
@@ -120,22 +122,6 @@ export default function Page() {
     }
   }, [queryRoute]);
 
-  // useEffect(() => {
-  // async function handleEmptyData() {
-  //   let data = await getAssetSibling("", dbType);
-  //   if (data.length > 0) {
-  //     queryRoute.setAssetId(data[0].id!, queryRoute.page);
-  //   } else {
-  //     const rootType = getGroupDefaultType(dbType);
-  //     queryRoute.createNewAsset(rootType, "");
-  //   }
-  // }
-  // console.log("page", queryRoute.dataId, queryRoute.mode);
-  // if (queryRoute.dataId === "" && queryRoute.mode === "display") {
-  //   handleEmptyData();
-  // }
-  // }, [queryRoute.dataId, queryRoute.mode]);
-
   return (
     <div className="max-w-max w-full flex flex-col">
       <TabListWidget />
@@ -153,7 +139,8 @@ function DocumentTreePage() {
   return (
     <DocumentTreeProvider type={dbType}>
       <DesktopOnly>
-        <div className="w-full max-h-max flex flex-row overflow-scroll">
+        <TableToolBar />
+        <div className="w-full max-h-max flex flex-row overflow-auto">
           <CollapsibleDataTableTreeView />
           <Sheet
             open={queryRoute.dataId !== "" || queryRoute.mode === "create"}

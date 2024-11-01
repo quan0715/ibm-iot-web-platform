@@ -31,13 +31,11 @@ export function PropertyValueField({
   switch (property.type as PropertyType) {
     case PropertyType.text:
       return (
-        // <InfoBlock label={property.name} orientation={orientation}>
         <InputPropField
           isRequired={property.required}
           name={`properties.${index}.value`}
           isDisabled={property.readonly}
         />
-        // </InfoBlock>
       );
     case PropertyType.number:
       return (

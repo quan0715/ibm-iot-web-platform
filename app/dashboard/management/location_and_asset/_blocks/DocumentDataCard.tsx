@@ -304,66 +304,6 @@ export function InfoBlock({
   );
 }
 
-// function MultiChildrenBlock<T extends DocumentObject>({
-//   label,
-//   child,
-//   parent,
-//   className,
-// }: {
-//   parent: DocumentObject;
-//   label: string;
-//   child: T[];
-//   labelColor?: string;
-//   className?: string;
-// }) {
-//   const queryPathService = useDataQueryRoute();
-//   const layerRule = getDocumentTypeLayer(parent.type);
-//   const childrenOptions = getDocumentChildrenTypeOptions(
-//     parent.type,
-//     layerRule.group
-//   );
-//   return (
-//     <InfoBlock label={label} className={cn(className)}>
-//       {queryPathService.mode === "create"
-//         ? null
-//         : childrenOptions.map((type) => (
-//             <CreateNewDataButton
-//               key={type}
-//               className={cn(
-//                 "w-fit rounded-md h-fit",
-//                 getDocumentTypeColor(type).textColor
-//               )}
-//               onClick={async () => {
-//                 let newAncestors =
-//                   parent.ancestors.length > 0
-//                     ? parent.ancestors + "," + parent.id
-//                     : parent.id;
-//                 if (newAncestors) {
-//                   queryPathService.createNewAsset(type, newAncestors);
-//                 }
-//               }}
-//               label={getDocumentEntityUIConfig(type).label}
-//             />
-//           ))}
-//       <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0.5">
-//         {child.map((child, index) => {
-//           return (
-//             <DocumentReferencePropertyView
-//               key={child.id}
-//               data={child}
-//               onClick={() => queryPathService.setAssetId(child.id ?? "")}
-//               mode={"display"}
-//             />
-//           );
-//         })}
-//         {childrenOptions.length === 0 && child.length === 0 ? (
-//           <p className={"text-sm text-gray-500 font-semibold"}>無下層資料</p>
-//         ) : null}
-//       </div>
-//     </InfoBlock>
-//   );
-// }
-
 export function StaticAttrChip({
   label,
   value,
