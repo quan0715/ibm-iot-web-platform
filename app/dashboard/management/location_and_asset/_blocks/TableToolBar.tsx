@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { LuImport, LuX } from "react-icons/lu";
+import { LuCircle, LuImport, LuX } from "react-icons/lu";
 import { FaUpload } from "react-icons/fa6";
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   Dialog,
   DialogClose,
@@ -23,6 +23,10 @@ import {
 } from "@/domain/entities/Document";
 import { createNewDocument } from "@/domain/entities/DocumentTemplate";
 import { DocumentReferencePropertyView } from "./DocumentDataDisplayUI";
+import { ReferencesList } from "@/app/dashboard/management/location_and_asset/_blocks/property_field/ReferencePropField";
+import { useDocumentData } from "@/app/dashboard/management/location_and_asset/_hooks/useDocument";
+import { FaSpinner } from "react-icons/fa";
+import { useDataQueryRoute } from "@/app/dashboard/management/location_and_asset/_hooks/useQueryRoute";
 interface FileSelectAreaProps {
   onFileSelect: (data: any[]) => void;
 }
@@ -41,7 +45,12 @@ export function ExportFileDialog() {
   const type = documentTree.type;
   const template = useDocumentTemplate(type);
   const [newDocumentData, setNewDocumentData] = useState<DocumentObject[]>([]);
-
+  const documentHandler = useDocumentData("", type);
+  const [isLoading, setLoadingState] = useState(false);
+  const [removeDocumentData, setRemoveDocumentData] = useState<
+    DocumentObject[]
+  >([]);
+  const queryPath = useDataQueryRoute();
   const handleFileSelect = (importedData: any[]) => {
     setData(importedData);
     if (template.template != undefined) {
@@ -56,6 +65,7 @@ export function ExportFileDialog() {
         let doc = createNewDocument(template!.template!, objectType, "");
         doc.title = data["主檔名稱"];
         doc.description = data["主檔描述"];
+        doc.ancestors = data["上層主檔"];
         return doc;
       });
       console.log(importedDocument);
@@ -80,20 +90,40 @@ export function ExportFileDialog() {
           選擇要匯入的檔案
         </DialogHeader>
         <FileSelectArea onFileSelect={handleFileSelect} />
-        <div className="w-full max-h-80 overflow-auto flex flex-col">
-          {newDocumentData.length > 0
-            ? newDocumentData.map((doc, index) => {
-                return (
-                  <DocumentReferencePropertyView
-                    isCollapsible={true}
-                    key={index}
-                    data={doc}
-                    onClick={() => {}}
-                    mode="selected"
-                  />
+        <div className="w-full max-h-72 overflow-auto flex flex-col">
+          {newDocumentData.length > 0 ? (
+            <ReferencesList
+              isInDialog={false}
+              isDataCollapsible={true}
+              references={newDocumentData}
+              label={`匯入檔案數目 ${data.length} 筆`}
+              onClick={(document) => {
+                setRemoveDocumentData([
+                  ...removeDocumentData,
+                  newDocumentData[0],
+                ]);
+                setNewDocumentData(
+                  newDocumentData.filter((doc, index) => doc != document),
                 );
-              })
-            : null}
+              }}
+              referencesMode={"selected"}
+            />
+          ) : null}
+          {removeDocumentData.length > 0 ? (
+            <ReferencesList
+              isInDialog={false}
+              isDataCollapsible={true}
+              references={removeDocumentData}
+              label={`移除檔案數目 ${removeDocumentData.length} 筆`}
+              onClick={(document) => {
+                setNewDocumentData([...newDocumentData, removeDocumentData[0]]);
+                setRemoveDocumentData(
+                  removeDocumentData.filter((doc, index) => doc != document),
+                );
+              }}
+              referencesMode={"candidate"}
+            />
+          ) : null}
         </div>
         <DialogFooter>
           <DialogClose asChild>
@@ -106,10 +136,27 @@ export function ExportFileDialog() {
             </Button>
           </DialogClose>
           <Button
+            disabled={isLoading}
             variant="outline"
             className="flex flex-row justify-center items-center space-x-1 text-blue-500 hover:text-blue-700"
+            onClick={() => {
+              console.log("imported data", newDocumentData);
+              setLoadingState((prevState) => true);
+              newDocumentData.map(async (doc) => {
+                await documentHandler.createNewDocument(doc);
+                setNewDocumentData((prevState) =>
+                  prevState.filter((document) => document != doc),
+                );
+              });
+              setLoadingState((prevState) => false);
+              queryPath.refresh();
+            }}
           >
-            <LuImport />
+            {isLoading ? (
+              <FaSpinner className={"animate-spin"} />
+            ) : (
+              <LuImport />
+            )}
             <span>匯入</span>
           </Button>
         </DialogFooter>
@@ -131,10 +178,11 @@ export function FileSelectArea({ onFileSelect }: FileSelectAreaProps) {
     const reader = new FileReader();
     reader.onload = (e) => {
       const data = e.target?.result;
-      const workbook = XLSX.read(data, { type: "binary" });
+      const workbook = XLSX.read(data, { type: "binary", cellDates: true });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      console.log(jsonData);
       onFileSelect(jsonData);
     };
     reader.readAsArrayBuffer(file);
@@ -175,7 +223,7 @@ export function FileSelectArea({ onFileSelect }: FileSelectAreaProps) {
       onDrop={handleDrop}
       className={cn(
         "w-full h-64 bg-black/5 dark:bg-black/50 rounded-2xl border-2 border-dotted",
-        "group hover:border-blue-500 hover:cursor-pointer"
+        "group hover:border-blue-500 hover:cursor-pointer",
       )}
     >
       <div className="h-full flex flex-1 flex-col justify-center items-center">

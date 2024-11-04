@@ -60,7 +60,7 @@ export const DocumentDataTreeEntryView = memo(function DashboardColumnMin({
   const queryPathService = useDataQueryRoute();
   const children = documentTree.getChildrenData(
     data.ancestors ?? "",
-    data.id ?? ""
+    data.id ?? "",
   );
   const childrenTypeOptions = getDocumentChildrenTypeOptions(type, docType);
   const haveChildren = childrenTypeOptions.length;
@@ -102,7 +102,7 @@ export const DocumentDataTreeEntryView = memo(function DashboardColumnMin({
           key={type}
           className={cn(
             getDocumentTypeColor(type).hoveringColor,
-            getDocumentTypeColor(type).textHoveringColor
+            getDocumentTypeColor(type).textHoveringColor,
           )}
         >
           <div style={{ paddingLeft: `${depth + 2.5}rem` }}>
@@ -113,7 +113,7 @@ export const DocumentDataTreeEntryView = memo(function DashboardColumnMin({
                   type,
                   data.ancestors.length > 0
                     ? data.ancestors + "," + data.id
-                    : data.id ?? ""
+                    : data.id ?? "",
                 );
                 onClose?.();
               }}
@@ -131,7 +131,7 @@ export const DocumentDataTreeEntryView = memo(function DashboardColumnMin({
       onOpenChange={setIsOpen}
       className={cn(
         "w-full rounded-md bg-background max-h-[500px] md:max-h-max overflow-y-scroll md:overflow-auto",
-        className
+        className,
       )}
     >
       <div
@@ -145,7 +145,7 @@ export const DocumentDataTreeEntryView = memo(function DashboardColumnMin({
                 haveChildren ? "visible" : "invisible",
                 "p-2 rounded-md opacity-0 bg-transparent",
                 isOpen ? "opacity-100" : "opacity-100 md:opacity-0",
-                "group-hover:cursor-pointer group-hover:opacity-100"
+                "group-hover:cursor-pointer group-hover:opacity-100",
               )}
             >
               <motion.div
@@ -238,19 +238,23 @@ export const DocumentReferencePropertyView = memo(function DashboardColumnMin({
       className={cn(
         "w-full group flex-1 flex flex-col justify-start items-center py-2 px-1 rounded-md",
         "hover:cursor-pointer",
-        tailwindColorClass.hoveringColor
+        tailwindColorClass.hoveringColor,
       )}
       onClick={mode === "display" ? onClick : undefined}
       onOpenChange={setIsOpen}
     >
-      <div className="w-full flex flex-1 flex-row justify-start items-start space-x-2 h-9 relative">
+      <div
+        className={cn(
+          "w-full flex flex-1 flex-row justify-start items-start space-x-2 h-9 relative",
+        )}
+      >
         {isCollapsible && (
           <CollapsibleTrigger className="bg-transparent" asChild>
             <div
               className={cn(
                 "p-1 rounded-md opacity-0 bg-transparent",
                 isOpen ? "opacity-100" : "opacity-100 md:opacity-0",
-                "group-hover:cursor-pointer group-hover:opacity-100"
+                "group-hover:cursor-pointer group-hover:opacity-100",
               )}
             >
               <motion.div
@@ -265,12 +269,17 @@ export const DocumentReferencePropertyView = memo(function DashboardColumnMin({
         )}
 
         <div className="w-full flex flex-col space-y-2">
-          <div className="flex-1 flex flex-row justify-start items-center space-x-2">
+          <div
+            className={cn(
+              "flex-1 flex flex-row justify-start items-center space-x-2",
+              tailwindColorClass.hoveringColor,
+            )}
+          >
             <DashboardLabelChip type={data.type} />
             <h1
               className={cn(
                 "font-semibold text-sm",
-                tailwindColorClass.textColor
+                tailwindColorClass.textColor,
               )}
             >
               {data.title}
@@ -281,7 +290,7 @@ export const DocumentReferencePropertyView = memo(function DashboardColumnMin({
                 "absolute",
                 "right-1 rounded-md p-1 h-9 w-9",
                 "invisible group-hover:visible",
-                "hover:bg-background hover:cursor-pointer"
+                "hover:bg-background hover:cursor-pointer",
               )}
               onClick={onClick}
               size={"icon"}
@@ -325,7 +334,7 @@ export const DocumentTreeNode = memo(function DocumentTreeNode({
       ref={chipRef}
       className={cn(
         "flex-1 flex flex-row justify-start items-center",
-        "hover:cursor-pointer"
+        "hover:cursor-pointer",
       )}
       style={style}
     >
@@ -334,7 +343,7 @@ export const DocumentTreeNode = memo(function DocumentTreeNode({
         <h1
           className={cn(
             "pl-2 font-semibold text-sm",
-            isSelected ? color.textColor : ""
+            isSelected ? color.textColor : "",
           )}
         >
           {data.title}
@@ -345,7 +354,7 @@ export const DocumentTreeNode = memo(function DocumentTreeNode({
             "absolute",
             "right-1 w-9 h-9 rounded-md",
             "invisible group-hover:visible",
-            "hover:bg-background hover:cursor-pointer"
+            "hover:bg-background hover:cursor-pointer",
           )}
           onClick={onClick}
           size={"icon"}
@@ -366,7 +375,7 @@ export const DataPropertyColumn = memo(function DataPropertyColumn({
   const getPropertyValue = (property: Property) => {
     switch (property.type as PropertyType) {
       case PropertyType.dateTime:
-        return <>{new Date(property.value as number).toLocaleString()}</>;
+        return <>{property.value.toLocaleString()}</>;
       case PropertyType.status:
         return <StatusChip status={Status[status as keyof typeof Status]} />;
       default:

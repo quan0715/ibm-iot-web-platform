@@ -65,7 +65,7 @@ export function CollapsibleDataTableTreeEntryView({
   const queryPathService = useDataQueryRoute();
   const children = documentTree.getChildrenData(
     document.ancestors ?? "",
-    document.id ?? ""
+    document.id ?? "",
   );
 
   const handleToggle = (open: boolean) => {
@@ -75,7 +75,7 @@ export function CollapsibleDataTableTreeEntryView({
   const depth = useContext(LayerContext) ?? 0;
   const childrenTypeOptions = getDocumentChildrenTypeOptions(
     document.type,
-    documentGroupType
+    documentGroupType,
   );
 
   const getCollapseChildren = () => {
@@ -96,7 +96,7 @@ export function CollapsibleDataTableTreeEntryView({
           key={type}
           className={cn(
             getDocumentTypeColor(type).hoveringColor,
-            getDocumentTypeColor(type).textHoveringColor
+            getDocumentTypeColor(type).textHoveringColor,
           )}
         >
           <div style={{ paddingLeft: `${depth + 1.5}rem` }}>
@@ -107,7 +107,7 @@ export function CollapsibleDataTableTreeEntryView({
                   type,
                   document.ancestors.length > 0
                     ? document.ancestors + "," + document.id
-                    : document.id ?? ""
+                    : document.id ?? "",
                 );
               }}
               label={`${getDocumentTypeLayer(type).name}`}
@@ -147,7 +147,7 @@ export function CollapsibleDataTableTreeEntryView({
       }
       className={cn(
         "rounded-md bg-background max-h-[500px] md:max-h-max",
-        className
+        className,
       )}
     >
       <DocumentFormTableColumn data={document} />
@@ -168,7 +168,7 @@ export function CollapsibleDataTableTreeView() {
   const defaultType = getGroupDefaultType(documentTree.type);
 
   const { group, isLoadingTemplate, template } = useDocumentTemplate(
-    documentTree.type
+    documentTree.type,
   );
 
   const properties = [
@@ -202,15 +202,8 @@ export function CollapsibleDataTableTreeView() {
     <SuspenseWidget
       isSuspense={isLoadingTemplate || !template}
       fallback={
-        <div className="w-[100px] max-w-max flex flex-col justify-start items-center space-y-">
-          {Array.from({ length: 5 }).map((_, index) => {
-            return (
-              <Skeleton
-                key={index}
-                className="w-full h-16 rounded-md bg-background"
-              />
-            );
-          })}
+        <div className="w-screen h-svh flex flex-col justify-center items-center">
+          <LoadingWidget />
         </div>
       }
     >
@@ -231,7 +224,7 @@ export function CollapsibleDataTableTreeView() {
                     className={cn(
                       tableColConfig.find((config) => config.name === prop.name)
                         ?.width ?? "w-48",
-                      "text-sm font-semibold text-gray-500"
+                      "text-sm font-semibold text-gray-500",
                     )}
                   >
                     <div className="w-full flex flex-row">{prop.name}</div>

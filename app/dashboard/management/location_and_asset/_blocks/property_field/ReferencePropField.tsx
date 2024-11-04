@@ -79,12 +79,12 @@ export function DocumentReferenceField({
       render={({ field }) => {
         const selected: DocumentObject[] =
           documentOptions.documentList?.filter((doc) =>
-            field.value.includes(doc.id)
+            field.value.includes(doc.id),
           ) ?? [];
 
         const options =
           documentOptions.documentList?.filter(
-            (doc) => !field.value.includes(doc.id)
+            (doc) => !field.value.includes(doc.id),
           ) ?? [];
 
         const onReferenceAdd = (documentId: string) => {
@@ -95,7 +95,7 @@ export function DocumentReferenceField({
           field.onChange(
             selected
               .filter((selectedDoc) => selectedDoc.id !== documentId)
-              .map((data) => data.id)
+              .map((data) => data.id),
           );
         };
 
@@ -111,11 +111,13 @@ export function DocumentReferenceField({
             <FormControl>
               <div
                 className={cn(
-                  "w-full flex flex-col justify-start items-start space-x-2 rounded-md py-0.5"
+                  "w-full flex flex-col justify-start items-start space-x-2 rounded-md py-0.5",
                 )}
               >
                 <Dialog>
-                  <DialogTrigger>
+                  <DialogTrigger
+                    className={view == "table" ? "hidden" : "block"}
+                  >
                     <SearchButton isEmpty={isReferenceEmpty} />
                   </DialogTrigger>
                   <DialogContent className="">
@@ -173,32 +175,38 @@ export function DocumentReferenceField({
   );
 }
 
-function ReferencesList({
+export function ReferencesList({
   references,
   label,
   isInDialog = false,
+  isDataCollapsible = false,
   referencesMode = "display",
   onClick,
 }: {
   references: DocumentObject[];
   label?: string;
-  isInDialog: boolean;
+  isInDialog?: boolean;
+  isDataCollapsible?: boolean;
   referencesMode?: "selected" | "candidate" | "display";
   onClick: (doc: DocumentObject) => void;
 }) {
   return (
     <div className="w-full h-fit grid grid-cols-1">
-      {label && <Label>{label}</Label>}
+      {label && <Label className={"py-1"}>{label}</Label>}
       {references.map((doc, index: number) => {
         return (
-          <AnimationListContent key={doc.id} index={index}>
-            <DialogCloseWrapper key={doc.id} wrapped={isInDialog}>
+          <AnimationListContent
+            key={doc.id + doc.title + "AnimationListContent" + referencesMode}
+            index={index}
+          >
+            <DialogCloseWrapper wrapped={isInDialog}>
               <DocumentReferencePropertyView
                 data={doc}
                 onClick={() => {
                   onClick(doc);
                 }}
                 mode={referencesMode}
+                isCollapsible={isDataCollapsible}
               />
             </DialogCloseWrapper>
           </AnimationListContent>

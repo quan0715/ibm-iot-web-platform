@@ -68,7 +68,7 @@ function TabListWidget() {
   }
 
   return (
-    <div className="bg-background h-fit overflow-x-auto px-4">
+    <div className="w-screen bg-background h-fit overflow-x-auto px-4">
       <div className="w-full flex flex-row justify-start items-center">
         {documentConfig.map((config) => {
           return (
@@ -78,7 +78,7 @@ function TabListWidget() {
                   variant={"ghost"}
                   className={cn(
                     !isSelectedDirectory(config) ? "text-gray-500" : "",
-                    "flex flex-row justify-center items-center space-x-1"
+                    "flex flex-row justify-center items-center space-x-1",
                   )}
                 >
                   {getTriggerLabel(config)}
