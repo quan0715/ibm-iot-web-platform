@@ -241,23 +241,23 @@ export function CollapsibleDataTableTreeView() {
               })}
             </div>
           </div>
-
-          {root.map((doc) => {
-            return (
-              <ReferenceGroupProvider
-                references={doc.properties.filter(
-                  (prop) => prop.type === PropertyType.reference,
-                )}
-                key={doc.id}
-              >
+          <ReferenceGroupProvider
+            references={
+              template?.properties?.filter(
+                (prop) => prop.type === PropertyType.reference,
+              ) ?? []
+            }
+          >
+            {root.map((doc) => {
+              return (
                 <CollapsibleDataTableTreeEntryView
                   document={doc}
                   expanded={true}
                   key={doc.id}
                 />
-              </ReferenceGroupProvider>
-            );
-          })}
+              );
+            })}
+          </ReferenceGroupProvider>
         </div>
       </TableContext.Provider>
     </SuspenseWidget>
