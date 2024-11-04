@@ -62,10 +62,16 @@ export function ExportFileDialog() {
           }
         });
         let objectType = getDocumentObjectTypeFromString(data["類別"]);
-        let doc = createNewDocument(template!.template!, objectType, "");
+
+        let doc = createNewDocument(
+          template!.template!,
+          objectType,
+          data["上層主檔"],
+        );
+
         doc.title = data["主檔名稱"];
         doc.description = data["主檔描述"];
-        doc.ancestors = data["上層主檔"];
+
         return doc;
       });
       console.log(importedDocument);

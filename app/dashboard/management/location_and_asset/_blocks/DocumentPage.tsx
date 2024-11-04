@@ -8,13 +8,24 @@ import {
 } from "@/domain/entities/Document";
 import { DocumentDataPageForm } from "../_blocks/DocumentDataCard";
 import { useDataQueryRoute } from "../_hooks/useQueryRoute";
-import { createContext, use, useEffect, useState, useTransition } from "react";
+import React, {
+  createContext,
+  use,
+  useEffect,
+  useState,
+  useTransition,
+} from "react";
 import { DashboardCard } from "@/app/dashboard/_components/DashboardCard";
 import { createNewDocument } from "@/domain/entities/DocumentTemplate";
 import { useDocumentTree } from "../_hooks/useDocumentContext";
 import { getGroupDefaultType } from "@/domain/entities/DocumentConfig";
 import { getDocumentTemplate } from "../_actions/DocumentAction";
 import { useDocumentTemplate } from "../_hooks/useDocumentTemplate";
+import { PropertyType } from "@/domain/entities/DocumentProperty";
+import {
+  CollapsibleDataTableTreeEntryView,
+  ReferenceGroupProvider,
+} from "@/app/dashboard/management/location_and_asset/_blocks/document_view/CollapsibleView";
 
 function SuspenseWidget() {
   return (
@@ -43,7 +54,7 @@ export function DatabasePage({
   const documentTree = useDocumentTree();
   const document = documentTree.getDocumentData(selectedDocumentId);
   const { group, isLoadingTemplate, template } = useDocumentTemplate(
-    documentTree.type
+    documentTree.type,
   );
 
   return (
@@ -53,23 +64,25 @@ export function DatabasePage({
       ) : (isDisplayMode && !document) || (isCreateMode && !template) ? (
         <ErrorWidget message="DataNotFound" />
       ) : (
-        <DocumentDataPageForm
-          key={
-            queryRoute.mode +
-            queryRoute.dataId +
-            queryRoute.dataType +
-            queryRoute.ancestors
+        <ReferenceGroupProvider
+          references={
+            template?.properties.filter(
+              (prop) => prop.type === PropertyType.reference,
+            ) ?? []
           }
-          data={
-            isCreateMode
-              ? createNewDocument(
-                  template!,
-                  queryRoute.dataType,
-                  queryRoute.ancestors
-                )
-              : (document as DocumentObject)
-          }
-        />
+        >
+          <DocumentDataPageForm
+            data={
+              isCreateMode
+                ? createNewDocument(
+                    template!,
+                    queryRoute.dataType,
+                    queryRoute.ancestors,
+                  )
+                : (document as DocumentObject)
+            }
+          />
+        </ReferenceGroupProvider>
       )}
     </div>
   );

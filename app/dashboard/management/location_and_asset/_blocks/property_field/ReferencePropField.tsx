@@ -28,12 +28,13 @@ import {
   SuspenseWidget,
 } from "@/components/blocks/LoadingWidget";
 import { DocumentReferencePropertyView } from "../DocumentDataDisplayUI";
-import { ButtonHTMLAttributes } from "react";
+import { ButtonHTMLAttributes, useContext } from "react";
 import { AnimationListContent } from "@/components/motion/AnimationListContent";
 import {
   DocumentTreeProvider,
   useDocumentTree,
 } from "../../_hooks/useDocumentContext";
+import { ReferenceGroupContext } from "@/app/dashboard/management/location_and_asset/_blocks/document_view/CollapsibleView";
 
 function SearchButton({ isEmpty = false }: { isEmpty?: boolean }) {
   const buttonProps = {
@@ -69,22 +70,27 @@ export function DocumentReferenceField({
 }: ReferenceFieldProps) {
   const { control, ...form } = useFormContext();
   const useQueryRoute = useDataQueryRoute();
-  const documentOptions = useDocumentReference(referenceGroup);
-  const documentTree = useDocumentTree();
-  console.log(documentTree);
+  // const documentOptions = useDocumentReference(referenceGroup);
+  const documentReferenceList = useContext(ReferenceGroupContext);
+  const documentOptions = documentReferenceList.find(
+    (doc) => doc.group === referenceGroup,
+  );
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => {
+        console.log("field", field.value);
         const selected: DocumentObject[] =
-          documentOptions.documentList?.filter((doc) =>
+          documentOptions?.data.filter((doc: DocumentObject) =>
             field.value.includes(doc.id),
           ) ?? [];
 
+        console.log(selected);
+
         const options =
-          documentOptions.documentList?.filter(
-            (doc) => !field.value.includes(doc.id),
+          documentOptions?.data.filter(
+            (doc: DocumentObject) => !field.value.includes(doc.id),
           ) ?? [];
 
         const onReferenceAdd = (documentId: string) => {
@@ -104,7 +110,7 @@ export function DocumentReferenceField({
         };
 
         const isReferenceEmpty = !field.value || field.value.length === 0;
-        const isBlocking = documentOptions.isFetchingData;
+        const isBlocking = documentOptions === undefined;
 
         return (
           <FormItem className="w-full flex flex-row justify-start items-center">
@@ -115,9 +121,7 @@ export function DocumentReferenceField({
                 )}
               >
                 <Dialog>
-                  <DialogTrigger
-                    className={view == "table" ? "hidden" : "block"}
-                  >
+                  <DialogTrigger className={view == "table" ? "hidden" : ""}>
                     <SearchButton isEmpty={isReferenceEmpty} />
                   </DialogTrigger>
                   <DialogContent className="">

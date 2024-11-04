@@ -17,7 +17,11 @@ import {
 import { motion } from "framer-motion";
 import { LuChevronRight } from "react-icons/lu";
 import { Separator } from "@/components/ui/separator";
-import { DocumentObject, Property } from "@/domain/entities/Document";
+import {
+  DocumentGroupType,
+  DocumentObject,
+  Property,
+} from "@/domain/entities/Document";
 import { useDocumentTree } from "@/app/dashboard/management/location_and_asset/_hooks/useDocumentContext";
 import { useDataQueryRoute } from "@/app/dashboard/management/location_and_asset/_hooks/useQueryRoute";
 import {
@@ -36,7 +40,10 @@ import {
   LoadingWidget,
   SuspenseWidget,
 } from "@/components/blocks/LoadingWidget";
-import { PropertyType } from "@/domain/entities/DocumentProperty";
+import {
+  DocumentReferenceProperty,
+  PropertyType,
+} from "@/domain/entities/DocumentProperty";
 import { CreateNewDataButton } from "../DataCRUDTrigger";
 import { AnimationListContent } from "@/components/motion/AnimationListContent";
 import { AnimationChevron } from "@/components/motion/AnimationChevron";
@@ -46,6 +53,8 @@ import {
   LayerContext,
   LevelCollapsibleWidget,
 } from "@/components/blocks/CollapsibleWidget";
+import { useDocumentReference } from "@/app/dashboard/management/location_and_asset/_hooks/useDocument";
+import { getDocuments } from "@/app/dashboard/management/location_and_asset/_actions/DocumentAction";
 
 type CollapsibleDataTableTreeViewProps = {
   document: DocumentObject;
@@ -164,7 +173,6 @@ export function CollapsibleDataTableTreeView() {
   // make sure uit wrapped in document Tree Provider
   const documentTree = useDocumentTree();
   const root = documentTree.getPathData("");
-  console.log("root", root);
   const defaultType = getGroupDefaultType(documentTree.type);
 
   const { group, isLoadingTemplate, template } = useDocumentTemplate(
@@ -233,17 +241,62 @@ export function CollapsibleDataTableTreeView() {
               })}
             </div>
           </div>
+
           {root.map((doc) => {
             return (
-              <CollapsibleDataTableTreeEntryView
-                document={doc}
-                expanded={true}
+              <ReferenceGroupProvider
+                references={doc.properties.filter(
+                  (prop) => prop.type === PropertyType.reference,
+                )}
                 key={doc.id}
-              />
+              >
+                <CollapsibleDataTableTreeEntryView
+                  document={doc}
+                  expanded={true}
+                  key={doc.id}
+                />
+              </ReferenceGroupProvider>
             );
           })}
         </div>
       </TableContext.Provider>
     </SuspenseWidget>
+  );
+}
+
+interface ReferenceGroupContextType {
+  group: DocumentGroupType;
+  data: DocumentObject[];
+}
+export const ReferenceGroupContext = createContext<ReferenceGroupContextType[]>(
+  [],
+);
+
+export function ReferenceGroupProvider({
+  children,
+  references,
+}: React.PropsWithChildren<{ references: Property[] }>) {
+  console.log("ReferenceGroupProvider", references);
+  const [referenceGroupData, setReferenceGroupData] = useState<
+    ReferenceGroupContextType[]
+  >([]);
+
+  useEffect(() => {
+    references.forEach((reference) => {
+      const group = (reference as DocumentReferenceProperty).referenceGroup;
+      getDocuments(group).then((data) => {
+        console.log("reference data", data);
+        setReferenceGroupData((prevState) => [
+          ...prevState,
+          { group, data } as ReferenceGroupContextType,
+        ]);
+      });
+    });
+  }, [references]);
+
+  return (
+    <ReferenceGroupContext.Provider value={referenceGroupData}>
+      {children}
+    </ReferenceGroupContext.Provider>
   );
 }

@@ -27,7 +27,6 @@ export function PropertyValueField({
   if (property === undefined) {
     return null;
   }
-  const orientation = view == "page" ? "vertical" : "horizontal";
   switch (property.type as PropertyType) {
     case PropertyType.text:
       return (
@@ -61,21 +60,16 @@ export function PropertyValueField({
     case PropertyType.reference:
       return (
         // <InfoBlock label={property.name} orientation={orientation}>
-        <DocumentTreeProvider
-          type={(property as DocumentReferenceProperty).referenceGroup}
-        >
-          <DocumentReferenceField
-            // isRequired={property.required}
-            name={`properties.${index}.value`}
-            isDisabled={property.readonly}
-            limit={(property as DocumentReferenceProperty).limit}
-            referenceGroup={
-              (property as DocumentReferenceProperty).referenceGroup
-            }
-            view={view}
-          />
-        </DocumentTreeProvider>
-
+        <DocumentReferenceField
+          // isRequired={property.required}
+          name={`properties.${index}.value`}
+          isDisabled={property.readonly}
+          limit={(property as DocumentReferenceProperty).limit}
+          referenceGroup={
+            (property as DocumentReferenceProperty).referenceGroup
+          }
+          view={view}
+        />
         // </InfoBlock>
       );
     case PropertyType.options:
@@ -91,7 +85,7 @@ export function PropertyValueField({
                 value: option,
                 component: <p>{option}</p>,
               };
-            }
+            },
           )}
           isDisabled={property.readonly}
         />
