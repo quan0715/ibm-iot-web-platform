@@ -34,7 +34,7 @@ import { useDocumentTree } from "../_hooks/useDocumentContext";
 import { motion } from "framer-motion";
 import { date } from "zod";
 import { PropertyValueField } from "./DocuemntFormPropertyField";
-import { DocumentFormTableColumn } from "./document_view/TableView";
+import { DocumentObjectTableRow } from "./document_view/TableView";
 import { InfoBlock } from "./DocumentDataCard";
 import { PropertyType } from "@/domain/entities/DocumentProperty";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -240,7 +240,14 @@ export const DocumentReferencePropertyView = memo(function DashboardColumnMin({
         "hover:cursor-pointer",
         tailwindColorClass.hoveringColor,
       )}
-      onClick={mode === "display" ? onClick : undefined}
+      onClick={
+        mode === "display"
+          ? (event) => {
+              onClick?.();
+              event.stopPropagation();
+            }
+          : undefined
+      }
       onOpenChange={setIsOpen}
     >
       <div

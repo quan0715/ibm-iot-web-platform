@@ -30,11 +30,7 @@ import {
 import { DocumentReferencePropertyView } from "../DocumentDataDisplayUI";
 import { ButtonHTMLAttributes, useContext } from "react";
 import { AnimationListContent } from "@/components/motion/AnimationListContent";
-import {
-  DocumentTreeProvider,
-  useDocumentTree,
-} from "../../_hooks/useDocumentContext";
-import { ReferenceGroupContext } from "@/app/dashboard/management/location_and_asset/_blocks/document_view/CollapsibleView";
+import { ReferenceGroupContext } from "@/app/dashboard/management/location_and_asset/_providers/GroupReferencesListProvider";
 
 function SearchButton({ isEmpty = false }: { isEmpty?: boolean }) {
   const buttonProps = {

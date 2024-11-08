@@ -46,7 +46,7 @@ interface DocumentObjectTemplate {
   group: DocumentGroupType;
   properties: Property[];
 }
-
+type DocumentTree = Map<string, Map<string, DocumentObject>>;
 type DocumentTypeString = keyof typeof DocumentObjectType;
 type DocumentGroupTypeString = keyof typeof DocumentGroupType;
 
@@ -58,7 +58,7 @@ function getDocumentGroupTypeFromString(type: string): DocumentGroupType {
 }
 
 function getDocumentObjectTypeFromString(
-  typeString: string
+  typeString: string,
 ): DocumentObjectType {
   if (!Object.keys(DocumentObjectType).includes(typeString)) {
     return DocumentObjectType.unknown;
@@ -69,6 +69,7 @@ function getDocumentObjectTypeFromString(
 export type {
   DocumentObject,
   DocumentObjectTemplate,
+  DocumentTree,
   Property,
   DocumentTypeString,
   DocumentGroupTypeString,

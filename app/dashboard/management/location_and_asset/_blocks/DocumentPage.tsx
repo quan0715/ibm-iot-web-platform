@@ -8,24 +8,13 @@ import {
 } from "@/domain/entities/Document";
 import { DocumentDataPageForm } from "../_blocks/DocumentDataCard";
 import { useDataQueryRoute } from "../_hooks/useQueryRoute";
-import React, {
-  createContext,
-  use,
-  useEffect,
-  useState,
-  useTransition,
-} from "react";
+import React from "react";
 import { DashboardCard } from "@/app/dashboard/_components/DashboardCard";
 import { createNewDocument } from "@/domain/entities/DocumentTemplate";
 import { useDocumentTree } from "../_hooks/useDocumentContext";
-import { getGroupDefaultType } from "@/domain/entities/DocumentConfig";
-import { getDocumentTemplate } from "../_actions/DocumentAction";
 import { useDocumentTemplate } from "../_hooks/useDocumentTemplate";
 import { PropertyType } from "@/domain/entities/DocumentProperty";
-import {
-  CollapsibleDataTableTreeEntryView,
-  ReferenceGroupProvider,
-} from "@/app/dashboard/management/location_and_asset/_blocks/document_view/CollapsibleView";
+import { ReferenceGroupProvider } from "@/app/dashboard/management/location_and_asset/_providers/GroupReferencesListProvider";
 
 function SuspenseWidget() {
   return (

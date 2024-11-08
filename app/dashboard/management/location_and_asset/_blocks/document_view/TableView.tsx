@@ -1,38 +1,16 @@
 "use client";
 import {
-  DashboardCard,
-  DashboardCardActionList,
-  DashboardCardContent,
-  DashboardCardHeader,
-  DashboardCardHeaderContent,
-  DashboardCardHeaderDescription,
-  DashboardCardHeaderTitle,
-} from "@/app/dashboard/_components/DashboardCard";
-import {
-  DocumentGroupType,
   DocumentObject,
   DocumentObjectType,
   Property,
 } from "@/domain/entities/Document";
-import { motion } from "framer-motion";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-import { useContext, createContext, useState, use, useEffect } from "react";
+import React, { createContext, useContext } from "react";
 import { Button } from "@/components/ui/button";
-import { LuLink, LuLoader2, LuLock, LuUnlock } from "react-icons/lu";
-import { useFieldArray, useForm, useFormContext } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 
-import { DesktopOnly, MobileOnly } from "@/components/layouts/layoutWidget";
-import {
-  getDocumentChildrenTypeOptions,
-  getDocumentTypeLayer,
-  getGroupDefaultType,
-} from "@/domain/entities/DocumentConfig";
-import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingWidget } from "@/components/blocks/LoadingWidget";
-import { createNewDocument } from "@/domain/entities/DocumentTemplate";
 import {
   colorVariants,
   getDocumentTypeColor,
@@ -42,84 +20,143 @@ import { useDataQueryRoute } from "../../_hooks/useQueryRoute";
 import { useDocumentData } from "../../_hooks/useDocument";
 import { InputPropField } from "../property_field/InputPropField";
 import { PropertyValueField } from "../DocuemntFormPropertyField";
-import { InfoBlock } from "../DocumentDataCard";
-import { useDocumentTemplate } from "../../_hooks/useDocumentTemplate";
+import { useTable } from "@/app/dashboard/management/location_and_asset/_hooks/useTable";
 import {
-  TextProperty,
-  TitleProperty,
-} from "@/domain/entities/DocumentProperty";
-import { config } from "process";
-import { TableContext } from "./CollapsibleView";
-import {
-  DocumentReferencePropertyView,
-  DocumentTreeNode,
-} from "../DocumentDataDisplayUI";
+  Column,
+  TableContext,
+  TableProvider,
+} from "@/app/dashboard/management/location_and_asset/_providers/TableContextProvider";
+import { PropertyType } from "@/domain/entities/DocumentProperty";
+import { IoTextOutline } from "react-icons/io5";
+import { GoNumber } from "react-icons/go";
+import { LuLoader2, LuLink2, LuCalendarDays } from "react-icons/lu";
+import { CiHashtag } from "react-icons/ci";
 
-export function DocumentFormTableView() {
-  const rootPath = "";
-  const documentTree = useDocumentTree();
-  const queryRoute = useDataQueryRoute();
-  const rootDataList = documentTree.getPathData(rootPath);
-  const defaultType = getGroupDefaultType(documentTree.type);
+type TableProps = {
+  title?: string;
+  description?: string;
+  properties: Property[];
+} & React.PropsWithChildren<{}> &
+  React.HTMLAttributes<HTMLDivElement>;
 
-  const { group, isLoadingTemplate, template } = useDocumentTemplate(
-    documentTree.type
-  );
+type TableHeaderProps = {} & React.HTMLAttributes<HTMLDivElement>;
 
-  if (isLoadingTemplate || !template) {
-    return <LoadingWidget />;
-  }
+type TableHeaderCellProps = {
+  column: Column;
+} & React.HTMLAttributes<HTMLDivElement>;
+type TableRowProps = {} & React.HTMLAttributes<HTMLTableRowElement>;
+type TableBodyProps = {} & React.HTMLAttributes<HTMLTableSectionElement>;
+type TableCellProps = {} & React.HTMLAttributes<HTMLTableCellElement>;
+export function Table({
+  title = "",
+  description = "",
+  properties,
+  className,
+  children,
+}: TableProps) {
+  const tableContext = {
+    title: title ?? "",
+    description: description ?? "",
+    columns: properties.map((prop) => {
+      return {
+        columnName: prop.name,
+        property: prop as Property,
+        width: 100,
+      };
+    }),
+  } as TableContext;
+  const table = useTable();
 
-  const color = getDocumentTypeColor(defaultType);
-
-  const properties = [
-    {
-      name: "名稱",
-      value: "",
-    } as Property,
-    {
-      name: "敘述",
-      value: "",
-    } as Property,
-    ...(template?.properties ?? ([] as Property[])),
-  ];
   return (
-    <div className="p-2 bg-background">
-      <DocumentTableHeader props={properties} />
-      <Separator />
-      {rootDataList.map((data) => {
-        return <DocumentFormTableColumn key={data.id} data={data} />;
-      })}
+    <TableProvider table={tableContext}>
+      <div className={cn("flex flex-col justify-start items-start", className)}>
+        {children}
+      </div>
+    </TableProvider>
+  );
+}
+
+export function TableRow({ className, children }: TableRowProps) {
+  return (
+    <div
+      className={cn(
+        "flex flex-row justify-start items-center space-x-0",
+        className,
+      )}
+    >
+      {children}
     </div>
   );
 }
 
-function DocumentTableHeader({ props }: { props: Property[] }) {
+export function TableHeader({ className, children }: TableHeaderProps) {
+  const tableContext = useContext(TableContext);
+  return <div className={className}>{children}</div>;
+}
+
+export function TableHeaderCell({ className, column }: TableHeaderCellProps) {
+  const getHeaderIcon = (propertyType: PropertyType) => {
+    switch (propertyType) {
+      case PropertyType.text:
+        return <IoTextOutline />;
+      case PropertyType.number:
+        return <GoNumber />;
+      case PropertyType.status:
+        return <CiHashtag />;
+      case PropertyType.reference:
+        return <LuLink2 />;
+      case PropertyType.dateTime:
+        return <LuCalendarDays />;
+      default:
+        return undefined;
+    }
+  };
   return (
-    <div className="w-full flex flex-row justify-start items-center p-2">
-      {props.map((prop) => {
-        return <DocumentTableHeaderCell key={prop.name} prop={prop} />;
-      })}
+    <div
+      className={cn(
+        "p-2 w-48 ",
+        "border-b border-black/5 dark:border-white/10",
+        className,
+      )}
+    >
+      <div
+        className={
+          "flex flex-row justify-start items-center text-gray-500 space-x-2"
+        }
+      >
+        {getHeaderIcon(column.property.type)}
+        <p className={"text-sm font-normal "}>{column.columnName}</p>
+      </div>
     </div>
   );
 }
 
-function DocumentTableHeaderCell({ prop }: { prop: Property }) {
+export function TableBody({ className, children }: TableBodyProps) {
+  return <tbody className={cn(className)}>{children}</tbody>;
+}
+
+export function TableCell({ className, children }: TableRowProps) {
   return (
-    <div className="w-48 text-sm font-semibold text-gray-500">
-      <p>{prop.name}</p>
+    <div
+      className={cn(
+        "w-48 h-11 flex flex-row justify-center items-center p-1",
+        "border-collapse border-b border-r border-black/5 dark:border-white/10",
+        className,
+      )}
+    >
+      {children}
     </div>
   );
 }
+
+const ThemeContext = createContext(colorVariants["blue"]);
 
 type DocumentFormTableViewProps = {
   data: DocumentObject;
   className?: string;
 };
 
-const ThemeContext = createContext(colorVariants["blue"]);
-
-export function DocumentFormTableColumn({
+export function DocumentObjectTableRow({
   data,
   className,
 }: DocumentFormTableViewProps) {
@@ -133,7 +170,7 @@ export function DocumentFormTableColumn({
   const children = documentTree.getChildrenData(data.ancestors, data.id ?? "");
 
   const colorTheme = getDocumentTypeColor(
-    data.type ?? DocumentObjectType.unknown
+    data.type ?? DocumentObjectType.unknown,
   );
 
   const form = useForm<DocumentObject>({
@@ -205,53 +242,37 @@ export function DocumentFormTableColumn({
       form.reset(data);
     }
   };
-  const config = useContext(TableContext);
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className={"flex flex-row relative"}
+      >
         <ThemeContext.Provider value={colorTheme}>
-          <div className="flex flex-col">
-            <DashboardCard className="shadow-sm flex flex-row justify-start items-start ">
-              {/* <InfoBlock label={""} orientation={"horizontal"}>
-                <DocumentReferencePropertyView
-                  data={data}
-                  mode="display"
-                  onClick={() => queryPathService.setAssetId(data.id!)}
+          <TableCell>
+            <InputPropField name="description" textCss={cn("font-semibold")} />
+          </TableCell>
+          {propsField.fields.map((field, index) => {
+            return (
+              <TableCell key={field.id}>
+                <PropertyValueField
+                  key={field.id}
+                  property={form.watch().properties[index]}
+                  index={index}
+                  view="table"
+                  form={"form"}
                 />
-              </InfoBlock> */}
-              <InfoBlock label={""} orientation={"horizontal"}>
-                <InputPropField
-                  name="description"
-                  textCss={cn(" font-semibold")}
-                ></InputPropField>
-              </InfoBlock>
-              {propsField.fields.map((field, index) => {
-                return (
-                  <InfoBlock
-                    key={field.id}
-                    orientation="horizontal"
-                    label={field.name}
-                    className={
-                      config.find((config) => config.name === field.name)
-                        ?.width ?? "w-48"
-                    }
-                  >
-                    <PropertyValueField
-                      key={field.id}
-                      property={form.watch().properties[index]}
-                      index={index}
-                      view="table"
-                    />
-                  </InfoBlock>
-                );
-              })}
-            </DashboardCard>
-            {form.formState.isDirty && (
-              <div
-                className={
-                  "w-full flex flex-row justify-start items-center space-x-2 py-1"
-                }
-              >
+              </TableCell>
+            );
+          })}
+          {form.formState.isDirty && (
+            <div
+              className={
+                "w-fit z-10 backdrop-blur bg-background flex flex-row justify-start items-center space-x-2 p-2 rounded-xl absolute top-[100%]"
+              }
+            >
+              <TableCell>
                 <Button
                   disabled={
                     isCreatingNewData
@@ -281,9 +302,9 @@ export function DocumentFormTableColumn({
                     ) : null}
                   </div>
                 </Button>
-              </div>
-            )}
-          </div>
+              </TableCell>
+            </div>
+          )}
         </ThemeContext.Provider>
       </form>
     </Form>

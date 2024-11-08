@@ -34,6 +34,7 @@ export const loginAction = async (data: any) => {
   await signIn("credentials", {
     userName: data.userName,
     password: data.password,
+    redirect: false,
   });
 
   return { success: "Login successful" };

@@ -1,7 +1,10 @@
-"use server"
-import { signOut, auth} from "@/lib/auth";
+"use server";
+import { signOut, auth } from "@/lib/auth";
 export async function signOutAction() {
+  console.log("signOutAction");
+  await signOut({
+    redirect: false,
+  });
 
-    console.log('signOutAction')
-    await signOut()
+  return { success: "Sign out successful" };
 }

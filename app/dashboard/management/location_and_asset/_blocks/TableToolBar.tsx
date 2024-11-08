@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { LuCircle, LuImport, LuX } from "react-icons/lu";
+import { LuCircle, LuImport, LuPlus, LuX } from "react-icons/lu";
 import { FaUpload } from "react-icons/fa6";
 import { useRef, useState, useTransition } from "react";
 import {
@@ -27,14 +27,21 @@ import { ReferencesList } from "@/app/dashboard/management/location_and_asset/_b
 import { useDocumentData } from "@/app/dashboard/management/location_and_asset/_hooks/useDocument";
 import { FaSpinner } from "react-icons/fa";
 import { useDataQueryRoute } from "@/app/dashboard/management/location_and_asset/_hooks/useQueryRoute";
+import { Separator } from "@/components/ui/separator";
+import { ActionButton } from "@/components/blocks/ActionButton";
 interface FileSelectAreaProps {
   onFileSelect: (data: any[]) => void;
 }
 
 export function TableToolBar() {
   return (
-    <div className="w-full flex flex-row justify-end px-4 py-1 bg-background dark:bg-black">
-      <ExportFileDialog></ExportFileDialog>
+    <div className="mb-2 h-12 w-full flex flex-row justify-end items-center bg-background dark:bg-black">
+      <Separator orientation={"vertical"} />
+      <ExportFileDialog />
+      <Separator orientation={"vertical"} />
+      <ActionButton icon={<LuPlus />} label={"新增"} onClick={() => {}} />
+      <Separator orientation={"vertical"} />
+      <ExportFileDialog />
     </div>
   );
 }
@@ -82,13 +89,7 @@ export function ExportFileDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="flex flex-row justify-center items-center space-x-1"
-        >
-          <LuImport />
-          <span>匯入</span>
-        </Button>
+        <ActionButton label={"匯入"} icon={<LuImport />} />
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

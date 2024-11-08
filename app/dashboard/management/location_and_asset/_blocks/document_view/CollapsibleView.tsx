@@ -1,21 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
+import React, { useState, createContext, useContext } from "react";
 
-import React, {
-  memo,
-  useEffect,
-  useState,
-  createContext,
-  useContext,
-} from "react";
-import { DashboardCard } from "@/app/dashboard/_components/DashboardCard";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { motion } from "framer-motion";
-import { LuChevronRight } from "react-icons/lu";
 import { Separator } from "@/components/ui/separator";
 import {
   DocumentGroupType,
@@ -34,7 +20,7 @@ import {
   DocumentReferencePropertyView,
   DocumentTreeNode,
 } from "../DocumentDataDisplayUI";
-import { DocumentFormTableColumn } from "./TableView";
+
 import { useDocumentTemplate } from "../../_hooks/useDocumentTemplate";
 import {
   LoadingWidget,
@@ -43,31 +29,42 @@ import {
 import {
   DocumentReferenceProperty,
   PropertyType,
+  TextProperty,
 } from "@/domain/entities/DocumentProperty";
 import { CreateNewDataButton } from "../DataCRUDTrigger";
-import { AnimationListContent } from "@/components/motion/AnimationListContent";
-import { AnimationChevron } from "@/components/motion/AnimationChevron";
-import { CollapsibleProps } from "@radix-ui/react-collapsible";
-import { Skeleton } from "@nextui-org/react";
 import {
   LayerContext,
   LevelCollapsibleWidget,
 } from "@/components/blocks/CollapsibleWidget";
-import { useDocumentReference } from "@/app/dashboard/management/location_and_asset/_hooks/useDocument";
-import { getDocuments } from "@/app/dashboard/management/location_and_asset/_actions/DocumentAction";
-
+import { ReferenceGroupProvider } from "../../_providers/GroupReferencesListProvider";
+import {
+  DocumentObjectTableRow,
+  Table,
+  TableRow,
+  TableHeader,
+  TableHeaderCell,
+  TableBody,
+  TableCell,
+} from "./TableView";
 type CollapsibleDataTableTreeViewProps = {
   document: DocumentObject;
   expanded?: boolean;
   className?: string;
 };
 
+function FullPageSuspense() {
+  return (
+    <div className="h-svh flex flex-col justify-center items-center bg-background">
+      <LoadingWidget />
+    </div>
+  );
+}
+
 export function CollapsibleDataTableTreeEntryView({
   document,
   className,
   expanded,
 }: CollapsibleDataTableTreeViewProps) {
-  console.log("document", document.id, "reload");
   const [isOpen, setIsOpen] = useState(expanded);
   const documentTree = useDocumentTree();
   const documentGroupType = documentTree.type;
@@ -76,11 +73,6 @@ export function CollapsibleDataTableTreeEntryView({
     document.ancestors ?? "",
     document.id ?? "",
   );
-
-  const handleToggle = (open: boolean) => {
-    setIsOpen(open);
-  };
-
   const depth = useContext(LayerContext) ?? 0;
   const childrenTypeOptions = getDocumentChildrenTypeOptions(
     document.type,
@@ -101,46 +93,40 @@ export function CollapsibleDataTableTreeEntryView({
               />
             );
           }),
-        <div
+        <TableRow
           key={type}
           className={cn(
             getDocumentTypeColor(type).hoveringColor,
             getDocumentTypeColor(type).textHoveringColor,
           )}
         >
-          <div style={{ paddingLeft: `${depth + 1.5}rem` }}>
-            <CreateNewDataButton
-              className={cn("text-gray-500 hover:bg-transparent")}
-              onClick={async () => {
-                queryPathService.createNewAsset(
-                  type,
-                  document.ancestors.length > 0
-                    ? document.ancestors + "," + document.id
-                    : document.id ?? "",
-                );
-              }}
-              label={`${getDocumentTypeLayer(type).name}`}
-            />
-          </div>
-          <Separator className="w-full" />
-        </div>,
+          <TableCell className={"w-full justify-start h-10"}>
+            <div style={{ paddingLeft: `${depth + 1.5}rem` }}>
+              <CreateNewDataButton
+                className={cn("text-gray-500 hover:bg-transparent")}
+                onClick={async () => {
+                  queryPathService.createNewAsset(
+                    type,
+                    document.ancestors.length > 0
+                      ? document.ancestors + "," + document.id
+                      : document.id ?? "",
+                  );
+                }}
+                label={`${getDocumentTypeLayer(type).name}`}
+              />
+            </div>
+          </TableCell>
+        </TableRow>,
       ];
     });
     return array.flat();
   };
 
-  // useEffect(() => {
-  //   let targetDocument = documentTree.getDocumentData(queryPathService.dataId);
-  //   if (queryPathService.dataId !== "") {
-  //     setIsOpen(queryPathService.dataId === document.id);
-  //     // setIsOpen(targetDocument?.ancestors.includes(document.id ?? "") ?? false);
-  //   }
-  // }, [document.id, queryPathService.dataId]);
-
   function onDocumentSelect(docId: string) {
     queryPathService.setAssetId(docId);
     // setIsOpen(true);
   }
+
   return (
     <LevelCollapsibleWidget
       expanded={expanded}
@@ -154,20 +140,12 @@ export function CollapsibleDataTableTreeEntryView({
           mode={"display"}
         />
       }
-      className={cn(
-        "rounded-md bg-background max-h-[500px] md:max-h-max",
-        className,
-      )}
+      className={cn("w-full md:max-h-max", className)}
     >
-      <DocumentFormTableColumn data={document} />
+      <DocumentObjectTableRow data={document} />
     </LevelCollapsibleWidget>
   );
 }
-type TableConfig = {
-  name: string;
-  width: string;
-};
-export const TableContext = createContext<TableConfig[]>([]);
 
 export function CollapsibleDataTableTreeView() {
   // make sure uit wrapped in document Tree Provider
@@ -181,122 +159,59 @@ export function CollapsibleDataTableTreeView() {
 
   const properties = [
     {
+      type: PropertyType.text,
+      name: "主檔名稱",
+    } as Property,
+    {
+      type: PropertyType.text,
       name: "敘述",
-      value: "",
     } as Property,
     ...(template?.properties ?? ([] as Property[])),
   ];
 
-  const tableColConfig = [
-    {
-      name: "主檔名稱",
-      width: "300px",
-    },
-    ...properties.map((prop) => {
-      if ((prop.type as PropertyType) === PropertyType.reference) {
-        return {
-          name: prop.name,
-          width: "w-56",
-        };
-      }
-      return {
-        name: prop.name,
-        width: "w-48",
-      };
-    }),
-  ];
+  // 預先取得 reference 的 數值，避免重複計算
+  const references =
+    template?.properties?.filter(
+      (prop) => prop.type === PropertyType.reference,
+    ) ?? [];
 
   return (
     <SuspenseWidget
       isSuspense={isLoadingTemplate || !template}
-      fallback={
-        <div className="w-screen h-svh flex flex-col justify-center items-center">
-          <LoadingWidget />
-        </div>
-      }
+      fallback={<FullPageSuspense />}
     >
-      <TableContext.Provider value={tableColConfig}>
-        <div className="max-w-max p-2 bg-background">
-          <div className="w-full bg-gray-50 ">
-            <div className="w-full flex flex-row justify-start items-center p-2">
-              <div
-                style={{ width: tableColConfig[0].width }}
-                className="text-sm font-semibold text-gray-500"
-              >
-                <p>主檔名稱</p>
-              </div>
-              {properties.map((prop) => {
-                return (
-                  <div
-                    key={prop.name}
-                    className={cn(
-                      tableColConfig.find((config) => config.name === prop.name)
-                        ?.width ?? "w-48",
-                      "text-sm font-semibold text-gray-500",
-                    )}
-                  >
-                    <div className="w-full flex flex-row">{prop.name}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <ReferenceGroupProvider
-            references={
-              template?.properties?.filter(
-                (prop) => prop.type === PropertyType.reference,
-              ) ?? []
-            }
-          >
+      <Table properties={properties} className={"w-full bg-background pl-8"}>
+        <TableHeader>
+          <TableRow>
+            {properties.map((prop, index) => {
+              return (
+                <TableHeaderCell
+                  key={prop.name}
+                  className={index == 0 ? "w-64" : ""}
+                  column={{
+                    columnName: prop.name,
+                    property: prop as Property,
+                    width: 100,
+                  }}
+                />
+              );
+            })}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <ReferenceGroupProvider references={references}>
             {root.map((doc) => {
               return (
                 <CollapsibleDataTableTreeEntryView
+                  key={doc.id}
                   document={doc}
                   expanded={true}
-                  key={doc.id}
                 />
               );
             })}
           </ReferenceGroupProvider>
-        </div>
-      </TableContext.Provider>
+        </TableBody>
+      </Table>
     </SuspenseWidget>
-  );
-}
-
-interface ReferenceGroupContextType {
-  group: DocumentGroupType;
-  data: DocumentObject[];
-}
-export const ReferenceGroupContext = createContext<ReferenceGroupContextType[]>(
-  [],
-);
-
-export function ReferenceGroupProvider({
-  children,
-  references,
-}: React.PropsWithChildren<{ references: Property[] }>) {
-  console.log("ReferenceGroupProvider", references);
-  const [referenceGroupData, setReferenceGroupData] = useState<
-    ReferenceGroupContextType[]
-  >([]);
-
-  useEffect(() => {
-    references.forEach((reference) => {
-      const group = (reference as DocumentReferenceProperty).referenceGroup;
-      getDocuments(group).then((data) => {
-        console.log("reference data", data);
-        setReferenceGroupData((prevState) => [
-          ...prevState,
-          { group, data } as ReferenceGroupContextType,
-        ]);
-      });
-    });
-  }, [references]);
-
-  return (
-    <ReferenceGroupContext.Provider value={referenceGroupData}>
-      {children}
-    </ReferenceGroupContext.Provider>
   );
 }

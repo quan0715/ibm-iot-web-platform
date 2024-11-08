@@ -16,7 +16,7 @@ import {
   DocumentMenuListMobile,
   DocumentTreeMenu,
 } from "./_blocks/DocumentNavigationMenu";
-import { DocumentTreeProvider } from "./_hooks/useDocumentContext";
+import { DocumentSearchTreeProvider } from "./_providers/DocumentSearchTreeProvider";
 import { DesktopOnly, MobileOnly } from "@/components/layouts/layoutWidget";
 import { Separator } from "@/components/ui/separator";
 import { documentConfig } from "@/domain/entities/DocumentConfig";
@@ -33,7 +33,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { DocumentFormTableView } from "./_blocks/document_view/TableView";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+
 import { CollapsibleDataTableTreeView } from "./_blocks/document_view/CollapsibleView";
 import {
   Sheet,
@@ -68,7 +69,7 @@ function TabListWidget() {
   }
 
   return (
-    <div className="w-screen bg-background h-fit overflow-x-auto px-4">
+    <div className="w-screen bg-background h-fit px-4">
       <div className="w-full flex flex-row justify-start items-center">
         {documentConfig.map((config) => {
           return (
@@ -123,7 +124,7 @@ export default function Page() {
   }, [queryRoute]);
 
   return (
-    <div className="max-w-max w-full flex flex-col">
+    <div>
       <TabListWidget />
       <Separator />
       <DocumentTreePage />
@@ -137,27 +138,29 @@ function DocumentTreePage() {
   const isBlocking = queryRoute.mode === "display" && queryRoute.dataId === "";
 
   return (
-    <DocumentTreeProvider type={dbType}>
-      <DesktopOnly>
+    <DocumentSearchTreeProvider type={dbType}>
+      <DesktopOnly className={"p-4 flex-1 flex flex-col "}>
         <TableToolBar />
-        <div className="w-full max-h-max flex flex-row overflow-auto">
+        <ScrollArea className="w-full h-fit">
+          {/*<div className={"h-[500px] w-[2000px] bg-red-100 "}>test</div>*/}
           <CollapsibleDataTableTreeView />
-          <Sheet
-            open={queryRoute.dataId !== "" || queryRoute.mode === "create"}
-            onOpenChange={(isOpen) => {
-              if (!isOpen) {
-                queryRoute.setAssetId("", queryRoute.page);
-              }
-            }}
-          >
-            <SheetContent side={"right"} className="w-full md:w-1/2">
-              <DatabasePage
-                key={dbType + queryRoute.dataId}
-                selectedDocumentId={queryRoute.dataId}
-              />
-            </SheetContent>
-          </Sheet>
-        </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+        <Sheet
+          open={queryRoute.dataId !== "" || queryRoute.mode === "create"}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              queryRoute.setAssetId("", queryRoute.page);
+            }
+          }}
+        >
+          <SheetContent side={"right"} className="w-full md:w-1/2">
+            <DatabasePage
+              key={dbType + queryRoute.dataId}
+              selectedDocumentId={queryRoute.dataId}
+            />
+          </SheetContent>
+        </Sheet>
       </DesktopOnly>
       <MobileOnly>
         <div className="w-full flex flex-col">
@@ -171,6 +174,6 @@ function DocumentTreePage() {
           </div>
         </div>
       </MobileOnly>
-    </DocumentTreeProvider>
+    </DocumentSearchTreeProvider>
   );
 }

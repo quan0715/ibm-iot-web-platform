@@ -63,7 +63,7 @@ function MenuContentEntry({
       <NavigationMenuLink
         className={cn(
           navigationMenuTriggerStyle(),
-          "w-full h-fit flex flex-row space-x-2 items-center justify-start"
+          "w-full h-fit flex flex-row space-x-2 items-center justify-start",
         )}
       >
         {icon ? icon : null}
@@ -203,7 +203,11 @@ export function AppNavBar() {
                 type="button"
                 variant={"destructive"}
                 onClick={async () => {
-                  await signOutAction();
+                  const res = await signOutAction();
+                  if (res?.success) {
+                    console.log("Login successful");
+                    location.reload();
+                  }
                 }}
               >
                 登出

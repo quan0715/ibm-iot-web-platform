@@ -25,6 +25,7 @@ export function InputPropField({
   isRequired = false,
   inputType = "text",
   textCss,
+  form,
   view = "page",
 }: InputFieldProps) {
   const { control } = useFormContext();
@@ -37,8 +38,8 @@ export function InputPropField({
           className={cn(
             "w-full flex",
             view === "page"
-              ? "flex-row  justify-start items-center"
-              : "flex-col justify-start items-start"
+              ? "flex-row justify-start items-center text-sm font-normal"
+              : "flex-col justify-start items-start text-md ",
           )}
         >
           <FormControl>
@@ -46,12 +47,13 @@ export function InputPropField({
               type={inputType}
               readOnly={isDisabled}
               className={cn(
-                'w-full text-md border-0 bg-transparent px-2 py-1 m-0 required:after:content-["*"]',
+                'w-full border-0 bg-transparent px-2 py-1 m-0 required:after:content-["*"]',
                 focusSettings,
                 hoverSettings,
-                textCss
+                textCss,
               )}
               {...field}
+              form={form}
               placeholder={placeholder}
               required={isRequired}
             />

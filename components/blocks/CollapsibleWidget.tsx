@@ -10,6 +10,10 @@ import { DashboardCard } from "@/app/dashboard/_components/DashboardCard";
 import { AnimationChevron } from "../motion/AnimationChevron";
 import { AnimationListContent } from "../motion/AnimationListContent";
 import { Separator } from "../ui/separator";
+import {
+  TableCell,
+  TableRow,
+} from "@/app/dashboard/management/location_and_asset/_blocks/document_view/TableView";
 
 export const LayerContext = createContext<number>(0);
 
@@ -32,27 +36,29 @@ export function LevelCollapsibleWidget({
     setIsOpen(open);
   };
 
-  const tabWidth = "300px";
+  // const tabWidth = "300px";
   const depth = useContext(LayerContext) ?? 0;
   const paddingStyle = {
-    paddingLeft: `${depth * 1}rem`,
+    paddingLeft: `${depth}rem`,
     // width: tabWidth,
   };
-
+  const uuid = Math.random().toString(36).substring(7);
+  const cssGroup = `document-${uuid}`;
+  const groupHover = `group-[.${cssGroup}]-hover:block`;
   return (
     <Collapsible
       open={isOpen}
       onOpenChange={handleToggle}
-      className={cn(
-        "w-full rounded-md bg-background max-h-[500px] md:max-h-max",
-        className
-      )}
+      className={cn("w-full bg-transparent", className)}
     >
-      <div className="w-full flex flex-row">
-        <DashboardCard
-          style={{ width: tabWidth }}
-          className="h-fit bg-transparent flex flex-row items-center group shadow-none"
-        >
+      <TableRow className={cn("relative group")}>
+        <div
+          className={cn(
+            "w-5 h-5 bg-white rounded-sm border-2 absolute -left-6 hidden",
+            "group-hover:block",
+          )}
+        ></div>
+        <TableCell className={"w-64"}>
           <CollapsibleTrigger
             style={paddingStyle}
             className={cn("w-full h-fit flex flex-row items-center py-1 group")}
@@ -61,16 +67,15 @@ export function LevelCollapsibleWidget({
               className={cn(
                 "p-2 rounded-md opacity-0 bg-transparent",
                 isOpen ? "opacity-100" : "opacity-100 md:opacity-0",
-                "group-hover:cursor-pointer group-hover:opacity-100"
+                "group-hover:cursor-pointer group-hover:opacity-100",
               )}
-              isExpanded={isOpen ? true : false}
+              isExpanded={isOpen ?? false}
             />
             {trigger}
           </CollapsibleTrigger>
-        </DashboardCard>
+        </TableCell>
         {children}
-      </div>
-      <Separator className="w-full" />
+      </TableRow>
       <CollapsibleContent className="w-full">
         {content.map((child, index) => (
           <AnimationListContent key={index} index={index}>

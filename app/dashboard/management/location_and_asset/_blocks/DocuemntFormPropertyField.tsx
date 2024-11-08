@@ -13,16 +13,17 @@ import { InputPropField } from "./property_field/InputPropField";
 import { CheckBoxPropField } from "./property_field/CheckBoxPropField";
 import { DashboardSelectionField } from "./property_field/SelectionPropField";
 import { DateTimePickerField } from "./property_field/DateTimePropField";
-import { DocumentTreeProvider } from "../_hooks/useDocumentContext";
 
 export function PropertyValueField({
   property,
   index,
   view = "page",
+  form,
 }: {
   property: Property;
   index?: number;
   view?: "page" | "table";
+  form?: string;
 }) {
   if (property === undefined) {
     return null;
@@ -34,6 +35,7 @@ export function PropertyValueField({
           isRequired={property.required}
           name={`properties.${index}.value`}
           isDisabled={property.readonly}
+          form={form}
         />
       );
     case PropertyType.number:
@@ -44,6 +46,7 @@ export function PropertyValueField({
           name={`properties.${index}.value`}
           isDisabled={property.readonly}
           inputType="text"
+          form={form}
         />
         // </InfoBlock>
       );
@@ -54,6 +57,7 @@ export function PropertyValueField({
           isRequired={property.required}
           name={`properties.${index}.value`}
           isDisabled={property.readonly}
+          form={form}
         />
         // </InfoBlock>
       );
@@ -69,6 +73,7 @@ export function PropertyValueField({
             (property as DocumentReferenceProperty).referenceGroup
           }
           view={view}
+          form={form}
         />
         // </InfoBlock>
       );
@@ -88,6 +93,7 @@ export function PropertyValueField({
             },
           )}
           isDisabled={property.readonly}
+          form={form}
         />
         // </InfoBlock>
       );
@@ -99,6 +105,7 @@ export function PropertyValueField({
           isRequired={property.required}
           name={`properties.${index}.value` as const}
           isDisabled={property.readonly}
+          form={form}
         />
         // </InfoBlock>
       );
@@ -118,6 +125,7 @@ export function PropertyValueField({
               ),
             };
           })}
+          form={form}
         />
         // </InfoBlock>
       );
